@@ -380,33 +380,41 @@
                         roles: ['admin', 'manager', 'user']
                     },
                     {
-                        id: 'content',
-                        title: 'Content Management',
-                        icon: 'fas fa-edit',
-                        roles: ['admin', 'manager'],
+                        id: 'societies',
+                        title: 'Societies',
+                        icon: 'fas fa-city',
+                        roles: ['admin'],
                         children: [
-                            {
-                                id: 'pages',
-                                title: 'Pages',
-                                icon: 'fas fa-file-alt',
-                                url: '<?= base_url("admin/pages") ?>',
-                                roles: ['admin', 'manager']
-                            },
-                            {
-                                id: 'posts',
-                                title: 'Posts',
-                                icon: 'fas fa-newspaper',
-                                url: '<?= base_url("admin/posts") ?>',
-                                roles: ['admin', 'manager']
-                            },
-                            {
-                                id: 'media',
-                                title: 'Media Library',
-                                icon: 'fas fa-images',
-                                url: '<?= base_url("admin/media") ?>',
-                                roles: ['admin', 'manager']
-                            }
+                            { id: 'societies-list', title: 'List Societies', icon: 'fas fa-list', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
+                            { id: 'societies-create', title: 'Create Society', icon: 'fas fa-plus', url: '<?= base_url("admin/societies/create") ?>', roles: ['admin'] },
                         ]
+                    },
+                    {
+                        id: 'tax-types',
+                        title: 'Tax Type',
+                        icon: 'fas fa-city',
+                        roles: ['admin'],
+                        children: [
+                            { id: 'tax-types-list', title: 'List Tax Types', icon: 'fas fa-list', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
+                            { id: 'tax-types-create', title: 'Create Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types/create") ?>', roles: ['admin'] },
+                        ]
+                    },
+                    {
+                      id: 'rates',
+                      title: 'Rates',
+                      icon: 'fas fa-rupee-sign',
+                      roles: ['admin'],
+                      children: [
+                        { id: 'rates-list', title: 'List Rates', icon: 'fas fa-list', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
+                        { id: 'rates-create', title: 'Create Rate', icon: 'fas fa-plus', url: '<?= base_url("admin/rates/create") ?>', roles: ['admin'] },
+                      ]
+                    },
+                    {
+                        id: 'charges',
+                        title: 'Charges',
+                        icon: 'fas fa-rupee-sign',
+                        url: '<?= base_url("admin/charges") ?>',
+                        roles: ['admin']
                     },
                     {
                         id: 'users',
@@ -448,6 +456,35 @@
                                 title: 'Create Area',
                                 icon: 'fas fa-plus',
                                 url: '<?= base_url("admin/areas/create") ?>',
+                                roles: ['admin', 'manager']
+                            }
+                        ]
+                    },                    
+                    {
+                        id: 'content',
+                        title: 'Content Management',
+                        icon: 'fas fa-edit',
+                        roles: ['admin', 'manager'],
+                        children: [
+                            {
+                                id: 'pages',
+                                title: 'Pages',
+                                icon: 'fas fa-file-alt',
+                                url: '<?= base_url("admin/pages") ?>',
+                                roles: ['admin', 'manager']
+                            },
+                            {
+                                id: 'posts',
+                                title: 'Posts',
+                                icon: 'fas fa-newspaper',
+                                url: '<?= base_url("admin/posts") ?>',
+                                roles: ['admin', 'manager']
+                            },
+                            {
+                                id: 'media',
+                                title: 'Media Library',
+                                icon: 'fas fa-images',
+                                url: '<?= base_url("admin/media") ?>',
                                 roles: ['admin', 'manager']
                             }
                         ]

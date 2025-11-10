@@ -41,3 +41,24 @@ $routes->post('/admin/tax-types/store', 'TaxTypes::store');
 $routes->get('/admin/tax-types/edit/(:num)', 'TaxTypes::edit/$1');
 $routes->post('/admin/tax-types/update/(:num)', 'TaxTypes::update/$1');
 $routes->get('/admin/tax-types/delete/(:num)', 'TaxTypes::delete/$1');
+
+// Societies routes (separate controller)
+$routes->get('/admin/societies', 'Societies::index');
+$routes->get('/admin/societies/create', 'Societies::create');
+$routes->post('/admin/societies/store', 'Societies::store');
+$routes->get('/admin/societies/edit/(:num)', 'Societies::edit/$1');
+$routes->post('/admin/societies/update/(:num)', 'Societies::update/$1');
+$routes->get('/admin/societies/delete/(:num)', 'Societies::delete/$1');
+
+// Rates routes (separate controller)
+$routes->get('/admin/rates', 'Rates::index');
+$routes->get('/admin/rates/create', 'Rates::create');
+$routes->post('/admin/rates/store', 'Rates::store');
+$routes->get('/admin/rates/edit/(:num)', 'Rates::edit/$1');
+$routes->post('/admin/rates/update/(:num)', 'Rates::update/$1');
+$routes->get('/admin/rates/delete/(:num)', 'Rates::delete/$1');
+
+// Charges routes (list and edit only)
+$routes->get('/admin/charges', 'Charges::index');
+$routes->get('/admin/charges/edit/(:num)', 'Charges::edit/$1');
+$routes->post('/admin/charges/update/(:num)', 'Charges::update/$1');
