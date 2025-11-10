@@ -10,27 +10,17 @@ class CreateSettingsTable extends Migration
     {
         $this->forge->addField([
             'id' => [
-                'type'           => 'INT',
-                'constraint'     => 5,
-                'unsigned'       => true,
+                'type' => 'INT',
+                'constraint' => 11,
+                'unsigned' => true,
                 'auto_increment' => true,
             ],
-            'site_name' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
+            'key' => [
+                'type' => 'VARCHAR',
+                'constraint' => 100,
             ],
-            'site_description' => [
+            'value' => [
                 'type' => 'TEXT',
-                'null' => true,
-            ],
-            'logo_path' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
-                'null' => true,
-            ],
-            'favicon_path' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
                 'null' => true,
             ],
             'created_at' => [
@@ -42,8 +32,18 @@ class CreateSettingsTable extends Migration
                 'null' => true,
             ],
         ]);
+
         $this->forge->addKey('id', true);
+        $this->forge->addUniqueKey('key');
         $this->forge->createTable('settings');
+
+        // Insert default settings
+        $this->db->table('settings')->insertBatch([
+            ['key' => 'site_name', 'value' => '', 'created_at' => date('Y-m-d H:i:s')],
+            ['key' => 'site_description', 'value' => '', 'created_at' => date('Y-m-d H:i:s')],
+            ['key' => 'site_logo', 'value' => '', 'created_at' => date('Y-m-d H:i:s')],
+            ['key' => 'site_favicon', 'value' => '', 'created_at' => date('Y-m-d H:i:s')]
+        ]);
     }
 
     public function down()

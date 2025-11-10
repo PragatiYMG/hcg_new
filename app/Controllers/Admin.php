@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Models\AdminModel;
 use App\Models\SettingsModel;
+use App\Models\AreaModel;
 use CodeIgniter\Controller;
 
 class Admin extends Controller
@@ -161,5 +162,147 @@ class Admin extends Controller
             $settingsModel->setSetting('site_favicon', $newFaviconName);
         }
         return redirect()->to(base_url('admin/settings'))->with('success', 'Settings updated successfully');
+    }
+
+    public function areas()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $areaModel = new AreaModel();
+        $areas = $areaModel->findAll();
+
+        return view('admin/areas/index', ['areas' => $areas]);
+    }
+
+    public function createArea()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        return view('admin/areas/create');
+    }
+
+    public function storeArea()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $areaModel = new AreaModel();
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'area_name' => [
+                'label' => 'Area Name',
+                'rules' => 'required|min_length[2]|max_length[255]',
+                'errors' => [
+                    'required' => 'Area name is required',
+                    'min_length' => 'Area name must be at least 2 characters',
+                    'max_length' => 'Area name cannot exceed 255 characters'
+                ]
+            ],
+            'status' => [
+                'label' => 'Status',
+                'rules' => 'required|in_list[active,inactive]',
+                'errors' => [
+                    'required' => 'Status is required',
+                    'in_list' => 'Status must be either active or inactive'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'area_name' => $this->request->getPost('area_name'),
+            'status' => $this->request->getPost('status')
+        ];
+
+        if ($areaModel->insert($data)) {
+            return redirect()->to(base_url('admin/areas'))->with('success', 'Area created successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to create area');
+        }
+    }
+
+    public function editArea($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $areaModel = new AreaModel();
+        $area = $areaModel->find($id);
+
+        if (!$area) {
+            return redirect()->to(base_url('admin/areas'))->with('error', 'Area not found');
+        }
+
+        return view('admin/areas/edit', ['area' => $area]);
+    }
+
+    public function updateArea($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $areaModel = new AreaModel();
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'area_name' => [
+                'label' => 'Area Name',
+                'rules' => 'required|min_length[2]|max_length[255]',
+                'errors' => [
+                    'required' => 'Area name is required',
+                    'min_length' => 'Area name must be at least 2 characters',
+                    'max_length' => 'Area name cannot exceed 255 characters'
+                ]
+            ],
+            'status' => [
+                'label' => 'Status',
+                'rules' => 'required|in_list[active,inactive]',
+                'errors' => [
+                    'required' => 'Status is required',
+                    'in_list' => 'Status must be either active or inactive'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'area_name' => $this->request->getPost('area_name'),
+            'status' => $this->request->getPost('status')
+        ];
+
+        if ($areaModel->update($id, $data)) {
+            return redirect()->to(base_url('admin/areas'))->with('success', 'Area updated successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to update area');
+        }
+    }
+
+    public function deleteArea($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $areaModel = new AreaModel();
+
+        if ($areaModel->delete($id)) {
+            return redirect()->to(base_url('admin/areas'))->with('success', 'Area deleted successfully');
+        } else {
+            return redirect()->to(base_url('admin/areas'))->with('error', 'Failed to delete area');
+        }
     }
 }

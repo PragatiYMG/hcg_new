@@ -98,6 +98,7 @@
         </div>
         <div>
             <h3>Quick Actions</h3>
+            <p><a href="<?= base_url('admin/areas') ?>">Manage Areas</a></p>
             <p><a href="<?= base_url('admin/settings') ?>">Manage Settings</a></p>
             <p>This is where you can add management features for your application.</p>
         </div>

@@ -31,7 +31,7 @@ class AreaModel extends Model
 
     // Callbacks
     protected $allowCallbacks = true;
-    protected $beforeInsert   = [];
+    protected $beforeInsert   = ['setCreatedFields'];
     protected $afterInsert    = [];
     protected $beforeUpdate   = [];
     protected $afterUpdate    = [];
@@ -39,4 +39,11 @@ class AreaModel extends Model
     protected $afterFind      = [];
     protected $beforeDelete   = [];
     protected $afterDelete    = [];
+
+    protected function setCreatedFields(array $data)
+    {
+        $data['data']['created_by'] = session()->get('admin_id');
+        $data['data']['created_date'] = date('Y-m-d H:i:s');
+        return $data;
+    }
 }
