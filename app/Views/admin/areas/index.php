@@ -5,9 +5,9 @@
     <div class="row">
         <div class="col-12">
             <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Areas Management</h3>
-                    <div class="card-tools">
+                <div class="card-header row">
+                    <h3 class="card-title col-6">Areas Management</h3>
+                    <div class="card-tools col-6 text-right">
                         <a href="<?= base_url('admin/areas/create') ?>" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus"></i> Add New Area
                         </a>

@@ -292,9 +292,6 @@
                         Admin Panel
                     </a>
                 </div>
-                <div class="col">
-                    <h1 class="page-title mb-0"><?= $this->renderSection('page_title', true) ?: 'Dashboard' ?></h1>
-                </div>
                 <div class="col-auto">
                     <div class="header-actions">
                         <button class="btn btn-link" title="Notifications">
@@ -328,15 +325,7 @@
 
     <!-- Sidebar Navigation -->
     <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
-        <div class="sidebar-header">
-            <h2>Navigation</h2>
-        </div>
-
-        <!-- Search Functionality -->
-        <div class="sidebar-search">
-            <input type="text" id="menuSearch" placeholder="Search menu..." aria-label="Search menu items">
-        </div>
-
+        
         <!-- Menu Sections -->
         <div id="menuSections">
             <!-- Menu items will be dynamically generated here -->
