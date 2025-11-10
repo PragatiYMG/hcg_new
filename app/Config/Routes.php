@@ -33,3 +33,11 @@ $routes->post('/admin/taxes/store', 'Taxes::store');
 $routes->get('/admin/taxes/edit/(:num)', 'Taxes::edit/$1');
 $routes->post('/admin/taxes/update/(:num)', 'Taxes::update/$1');
 $routes->get('/admin/taxes/delete/(:num)', 'Taxes::delete/$1');
+
+// Tax Types routes (separate controller)
+$routes->get('/admin/tax-types', 'TaxTypes::index');
+$routes->get('/admin/tax-types/create', 'TaxTypes::create');
+$routes->post('/admin/tax-types/store', 'TaxTypes::store');
+$routes->get('/admin/tax-types/edit/(:num)', 'TaxTypes::edit/$1');
+$routes->post('/admin/tax-types/update/(:num)', 'TaxTypes::update/$1');
+$routes->get('/admin/tax-types/delete/(:num)', 'TaxTypes::delete/$1');
