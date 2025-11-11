@@ -20,14 +20,14 @@
             </div>
           <?php endif; ?>
 
-          <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post">
+          <form action="<?= base_url('admin/users/update/' . $user['id']) ?>" method="post">            
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" class="form-control" value="<?= esc(old('username') !== null ? old('username') : $user['username']) ?>" readonly>
+            </div>
             <div class="form-group">
               <label for="email">Email</label>
               <input type="email" name="email" id="email" class="form-control" value="<?= esc(old('email') !== null ? old('email') : $user['email']) ?>" required>
-            </div>
-            <div class="form-group">
-              <label for="username">Username</label>
-              <input type="text" name="username" id="username" class="form-control" value="<?= esc(old('username') !== null ? old('username') : $user['username']) ?>" required>
             </div>
             <div class="form-group">
               <label for="password">Password</label>

@@ -56,7 +56,6 @@ class Users extends Controller
         $validation = \Config\Services::validation();
         $validation->setRules([
             'email' => ['label' => 'Email', 'rules' => 'required|valid_email|is_unique[users.email]'],
-            'username' => ['label' => 'Username', 'rules' => 'required|min_length[3]|max_length[100]|is_unique[users.username]'],
             'password' => ['label' => 'Password', 'rules' => 'required|min_length[6]'],
             'active' => ['label' => 'Active', 'rules' => 'required|in_list[0,1]'],
             'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
@@ -67,9 +66,14 @@ class Users extends Controller
         }
 
         $model = new UserModel();
+        // Generate username in format CS00001 using next id sequence
+        $row = $model->selectMax('id')->first();
+        $nextId = (int)($row['id'] ?? 0) + 1;
+        $generatedUsername = 'CS' . str_pad((string)$nextId, 5, '0', STR_PAD_LEFT);
+
         $data = [
             'email' => $this->request->getPost('email'),
-            'username' => $this->request->getPost('username'),
+            'username' => $generatedUsername,
             'password' => $this->request->getPost('password'), // hashed in model
             'active' => (int)$this->request->getPost('active'),
             'status' => $this->request->getPost('status'),
@@ -109,7 +113,6 @@ class Users extends Controller
         // Uniqueness with ignore current record
         $validation->setRules([
             'email' => ['label' => 'Email', 'rules' => "required|valid_email|is_unique[users.email,id,{$id}]"],
-            'username' => ['label' => 'Username', 'rules' => "required|min_length[3]|max_length[100]|is_unique[users.username,id,{$id}]"],
             'password' => ['label' => 'Password', 'rules' => 'permit_empty|min_length[6]'],
             'active' => ['label' => 'Active', 'rules' => 'required|in_list[0,1]'],
             'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
@@ -122,7 +125,6 @@ class Users extends Controller
         $model = new UserModel();
         $data = [
             'email' => $this->request->getPost('email'),
-            'username' => $this->request->getPost('username'),
             'active' => (int)$this->request->getPost('active'),
             'status' => $this->request->getPost('status'),
         ];
