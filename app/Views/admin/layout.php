@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 
@@ -341,9 +343,12 @@
     </main>
 
     <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
 
     <!-- Menu Master JavaScript -->
     <script>
@@ -842,6 +847,24 @@
             // Make menuMaster available globally for dynamic updates
             window.menuMaster = menuMaster;
         });
+    </script>
+
+    <script>
+      // Initialize DataTables on all tables marked with .datatable
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.jQuery && $.fn.DataTable) {
+          $('.datatable').each(function() {
+            $(this).DataTable({
+              pageLength: 10,
+              lengthChange: true,
+              ordering: true,
+              searching: true,
+              autoWidth: false,
+              responsive: true
+            });
+          });
+        }
+      });
     </script>
 
     <?= $this->renderSection('scripts', true) ?>
