@@ -292,8 +292,8 @@
                     <?php 
                         $logo = isset($site_logo) ? trim($site_logo) : '';
                         $logoUrl = $logo
-                            ? (preg_match('/^https?:\/\//i', $logo) ? $logo : APPPATH.'uploads/' . ltrim($logo, '/'))
-                            : APPPATH.'uploads/logo_1762758146.png';
+                            ? (preg_match('/^https?:\/\//i', $logo) ? $logo : base_url('uploads/' . ltrim($logo, '/')))
+                            : base_url('uploads/logo_1762758146.png');
                     ?>
                     <a href="<?= base_url('admin/dashboard') ?>" class="logo">
                         <img src="<?= esc($logoUrl) ?>" alt="Logo" class="logo-img">
@@ -396,10 +396,10 @@
                         icon: 'fab fa-superpowers',
                         roles: ['admin'],
                         children: [
+                            { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
                             { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
                             { id: 'tax-types-list', title: 'Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
                             { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
-                            { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
                             { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
                         ]
                     },  

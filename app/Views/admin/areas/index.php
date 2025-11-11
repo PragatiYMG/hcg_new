@@ -52,12 +52,12 @@
                                             </span>
                                         </td>
                                         <td><?= $area['created_date'] ? date('d M Y H:i', strtotime($area['created_date'])) : 'N/A' ?></td>
-                                        <td>
-                                            <a href="<?= base_url('admin/areas/edit/' . $area['id']) ?>" class="btn btn-warning btn-sm">
-                                                <i class="fas fa-edit"></i> Edit
+                                        <td> 
+                                            <a href="<?= base_url('admin/areas/edit/' . $area['id']) ?>" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="<?= base_url('admin/areas/delete/' . $area['id']) ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this area?')">
-                                                <i class="fas fa-trash"></i> Delete
+                                            <a href="<?= base_url('admin/areas/delete/' . $area['id']) ?>" class="btn btn-outline-danger btn-sm" onclick="return confirm('Are you sure you want to delete this area?')">
+                                                <i class="fas fa-trash"></i>
                                             </a>
                                         </td>
                                     </tr>

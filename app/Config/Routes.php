@@ -15,8 +15,13 @@ $routes->get('/admin/logout', 'Admin::logout');
 $routes->get('/admin/settings', 'Admin::settings');
 $routes->post('/admin/settings/update', 'Admin::updateSettings');
 
-// Temporary redirect for missing Users module
-$routes->get('/admin/users', 'Admin::users');
+// Users routes (admin)
+$routes->get('/admin/users', 'Users::index');
+$routes->get('/admin/users/create', 'Users::create');
+$routes->post('/admin/users/store', 'Users::store');
+$routes->get('/admin/users/edit/(:num)', 'Users::edit/$1');
+$routes->post('/admin/users/update/(:num)', 'Users::update/$1');
+$routes->get('/admin/users/delete/(:num)', 'Users::delete/$1');
 
 // Areas routes
 $routes->get('/admin/areas', 'Admin::areas');
@@ -62,3 +67,4 @@ $routes->get('/admin/rates/delete/(:num)', 'Rates::delete/$1');
 $routes->get('/admin/charges', 'Charges::index');
 $routes->get('/admin/charges/edit/(:num)', 'Charges::edit/$1');
 $routes->post('/admin/charges/update/(:num)', 'Charges::update/$1');
+
