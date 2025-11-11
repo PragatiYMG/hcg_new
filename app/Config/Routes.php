@@ -68,3 +68,6 @@ $routes->get('/admin/charges', 'Charges::index');
 $routes->get('/admin/charges/edit/(:num)', 'Charges::edit/$1');
 $routes->post('/admin/charges/update/(:num)', 'Charges::update/$1');
 
+// Bills routes (edit-focused)
+$routes->get('/admin/bills/edit/(:num)', 'Bills::edit/$1');
+$routes->post('/admin/bills/update/(:num)', 'Bills::update/$1');

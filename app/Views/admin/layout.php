@@ -401,6 +401,7 @@
                             { id: 'tax-types-list', title: 'Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
                             { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
                             { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
+                            { id: 'bills-edit', title: 'Bill Settings', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills/edit/1") ?>', roles: ['admin'] },
                         ]
                     },  
                     { 
