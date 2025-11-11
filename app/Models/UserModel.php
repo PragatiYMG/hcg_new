@@ -24,6 +24,16 @@ class UserModel extends Model
         'created_by',
         'updated_at',
         'updated_by',
+        // Extended profile fields
+        'first_name','middle_name','last_name',
+        'gender','dob','father_husband_name',
+        'mobile','phone_office','phone_residence',
+        'house_no','block_no','plot_no','sector','street_name','landmark',
+        'pincode','city','state','country',
+        'society','payment_mode','registration_fee','accommodation_type',
+        'photo_path','aadhaar_no','aadhaar_file_path',
+        'primary_id_type','primary_id_no','primary_id_file_path',
+        'secondary_id_type','secondary_id_no','secondary_id_file_path',
     ];
 
     protected bool $allowEmptyInserts = false;

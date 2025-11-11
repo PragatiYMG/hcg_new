@@ -71,3 +71,27 @@ $routes->post('/admin/charges/update/(:num)', 'Charges::update/$1');
 // Bills routes (edit-focused)
 $routes->get('/admin/bills/edit/(:num)', 'Bills::edit/$1');
 $routes->post('/admin/bills/update/(:num)', 'Bills::update/$1');
+
+// Countries routes (separate controller)
+$routes->get('/admin/countries', 'Countries::index');
+$routes->get('/admin/countries/create', 'Countries::create');
+$routes->post('/admin/countries/store', 'Countries::store');
+$routes->get('/admin/countries/edit/(:num)', 'Countries::edit/$1');
+$routes->post('/admin/countries/update/(:num)', 'Countries::update/$1');
+$routes->get('/admin/countries/delete/(:num)', 'Countries::delete/$1');
+
+// States routes (separate controller)
+$routes->get('/admin/states', 'States::index');
+$routes->get('/admin/states/create', 'States::create');
+$routes->post('/admin/states/store', 'States::store');
+$routes->get('/admin/states/edit/(:num)', 'States::edit/$1');
+$routes->post('/admin/states/update/(:num)', 'States::update/$1');
+$routes->get('/admin/states/delete/(:num)', 'States::delete/$1');
+
+// Cities routes (separate controller)
+$routes->get('/admin/cities', 'Cities::index');
+$routes->get('/admin/cities/create', 'Cities::create');
+$routes->post('/admin/cities/store', 'Cities::store');
+$routes->get('/admin/cities/edit/(:num)', 'Cities::edit/$1');
+$routes->post('/admin/cities/update/(:num)', 'Cities::update/$1');
+$routes->get('/admin/cities/delete/(:num)', 'Cities::delete/$1');
