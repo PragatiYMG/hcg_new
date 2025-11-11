@@ -289,8 +289,14 @@
                     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
                         <i class="fas fa-bars"></i>
                     </button>
+                    <?php 
+                        $logo = isset($site_logo) ? trim($site_logo) : '';
+                        $logoUrl = $logo
+                            ? (preg_match('/^https?:\/\//i', $logo) ? $logo : APPPATH.'uploads/' . ltrim($logo, '/'))
+                            : APPPATH.'uploads/logo_1762758146.png';
+                    ?>
                     <a href="<?= base_url('admin/dashboard') ?>" class="logo">
-                        <img src="<?= base_url('uploads/logo_1762758146.png') ?>" alt="Logo" class="logo-img">
+                        <img src="<?= esc($logoUrl) ?>" alt="Logo" class="logo-img">
                         Admin Panel
                     </a>
                 </div>
@@ -385,42 +391,25 @@
                         roles: ['admin', 'manager', 'user']
                     },
                     {
-                        id: 'societies',
-                        title: 'Societies',
-                        icon: 'fas fa-city',
+                        id: 'masters',
+                        title: 'Masters',
+                        icon: 'fab fa-superpowers',
                         roles: ['admin'],
                         children: [
-                            { id: 'societies-list', title: 'List Societies', icon: 'fas fa-list', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
-                            { id: 'societies-create', title: 'Create Society', icon: 'fas fa-plus', url: '<?= base_url("admin/societies/create") ?>', roles: ['admin'] },
+                            { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
+                            { id: 'tax-types-list', title: 'Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
+                            { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
+                            { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
+                            { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
                         ]
-                    },
-                    {
-                        id: 'tax-types',
-                        title: 'Tax Type',
-                        icon: 'fas fa-city',
-                        roles: ['admin'],
-                        children: [
-                            { id: 'tax-types-list', title: 'List Tax Types', icon: 'fas fa-list', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
-                            { id: 'tax-types-create', title: 'Create Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types/create") ?>', roles: ['admin'] },
-                        ]
-                    },
-                    {
-                      id: 'rates',
-                      title: 'Rates',
-                      icon: 'fas fa-rupee-sign',
-                      roles: ['admin'],
-                      children: [
-                        { id: 'rates-list', title: 'List Rates', icon: 'fas fa-list', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
-                        { id: 'rates-create', title: 'Create Rate', icon: 'fas fa-plus', url: '<?= base_url("admin/rates/create") ?>', roles: ['admin'] },
-                      ]
-                    },
-                    {
-                        id: 'charges',
-                        title: 'Charges',
-                        icon: 'fas fa-rupee-sign',
-                        url: '<?= base_url("admin/charges") ?>',
-                        roles: ['admin']
-                    },
+                    },  
+                    { 
+                        id: 'taxes-list', 
+                        title: 'Taxes', 
+                        icon: 'fas fa-plus', 
+                        url: '<?= base_url("admin/taxes") ?>', 
+                        roles: ['admin'] 
+                    },                
                     {
                         id: 'users',
                         title: 'User Management',
@@ -442,29 +431,7 @@
                                 roles: ['admin']
                             }
                         ]
-                    },
-                    {
-                        id: 'areas',
-                        title: 'Manage Areas',
-                        icon: 'fas fa-map-marker-alt',
-                        roles: ['admin', 'manager'],
-                        children: [
-                            {
-                                id: 'areas-list',
-                                title: 'List Areas',
-                                icon: 'fas fa-list',
-                                url: '<?= base_url("admin/areas") ?>',
-                                roles: ['admin', 'manager']
-                            },
-                            {
-                                id: 'areas-create',
-                                title: 'Create Area',
-                                icon: 'fas fa-plus',
-                                url: '<?= base_url("admin/areas/create") ?>',
-                                roles: ['admin', 'manager']
-                            }
-                        ]
-                    },                    
+                    },               
                     {
                         id: 'content',
                         title: 'Content Management',

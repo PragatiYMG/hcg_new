@@ -23,7 +23,16 @@
                     <form action="<?= base_url('admin/taxes/store') ?>" method="post">
                         <div class="form-group">
                             <label for="tax_type">Tax Type</label>
-                            <input type="text" name="tax_type" id="tax_type" class="form-control" value="<?= old('tax_type') ?>" required>
+                            <select name="tax_type" id="tax_type" class="form-control" required>
+                                <option value="">-- Select Tax Type --</option>
+                                <?php if (!empty($types)): ?>
+                                    <?php foreach ($types as $t): ?>
+                                        <option value="<?= esc($t['type_name']) ?>" <?= old('tax_type') === ($t['type_name'] ?? '') ? 'selected' : '' ?>>
+                                            <?= esc($t['type_name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
                         </div>
                         <div class="form-group">
                             <label for="tax_percentage">Tax Percentage</label>

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\TaxModel;
 use App\Models\SettingsModel;
+use App\Models\TaxTypeModel;
 
 class Taxes extends Controller
 {
@@ -39,8 +40,13 @@ class Taxes extends Controller
         if ($redirect = $this->ensureAuth()) return $redirect;
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
+
+        $typeModel = new TaxTypeModel();
+        $types = $typeModel->where('status', 'active')->findAll();
+
         return view('admin/taxes/create', [
             'site_logo' => $site_logo,
+            'types' => $types,
         ]);
     }
 
@@ -51,7 +57,7 @@ class Taxes extends Controller
         $validation->setRules([
             'tax_type' => [
                 'label' => 'Tax Type',
-                'rules' => 'required|min_length[2]|max_length[100]'
+                'rules' => 'required|is_not_unique[tax_types.type_name]'
             ],
             'tax_percentage' => [
                 'label' => 'Tax Percentage',
@@ -88,9 +94,14 @@ class Taxes extends Controller
         }
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
+
+        $typeModel = new TaxTypeModel();
+        $types = $typeModel->where('status', 'active')->findAll();
+
         return view('admin/taxes/edit', [
             'tax' => $tax,
             'site_logo' => $site_logo,
+            'types' => $types,
         ]);
     }
 
@@ -101,7 +112,7 @@ class Taxes extends Controller
         $validation->setRules([
             'tax_type' => [
                 'label' => 'Tax Type',
-                'rules' => 'required|min_length[2]|max_length[100]'
+                'rules' => 'required|is_not_unique[tax_types.type_name]'
             ],
             'tax_percentage' => [
                 'label' => 'Tax Percentage',
