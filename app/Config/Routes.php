@@ -131,3 +131,11 @@ $routes->get('/admin/connection-statuses/create', 'ConnectionStatuses::create');
 $routes->post('/admin/connection-statuses/store', 'ConnectionStatuses::store');
 $routes->get('/admin/connection-statuses/edit/(:num)', 'ConnectionStatuses::edit/$1');
 $routes->post('/admin/connection-statuses/update/(:num)', 'ConnectionStatuses::update/$1');
+
+// Meter Contractors routes (DataTable with AJAX CRUD - no delete)
+$routes->get('/admin/meter-contractors', 'MeterContractors::index');
+$routes->get('/admin/meter-contractors/get-table-data', 'MeterContractors::getTableData');
+$routes->get('/admin/meter-contractors/create', 'MeterContractors::create');
+$routes->post('/admin/meter-contractors/store', 'MeterContractors::store');
+$routes->get('/admin/meter-contractors/edit/(:num)', 'MeterContractors::edit/$1');
+$routes->post('/admin/meter-contractors/update/(:num)', 'MeterContractors::update/$1');

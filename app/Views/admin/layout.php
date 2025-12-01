@@ -428,6 +428,7 @@
                             { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
                             { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
                             { id: 'connection-statuses-list', title: 'Connection Statuses', icon: 'fas fa-tasks', url: '<?= base_url("admin/connection-statuses") ?>', roles: ['admin'] },
+                            { id: 'meter-contractors-list', title: 'Meter Contractors', icon: 'fas fa-tools', url: '<?= base_url("admin/meter-contractors") ?>', roles: ['admin'] },
                             { id: 'connection-fees-list', title: 'Connection Fees', icon: 'fas fa-plug', url: '<?= base_url("admin/connection-fees") ?>', roles: ['admin'] },
                             { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
                             { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
