@@ -1,5 +1,5 @@
 <?= $this->extend('admin/layout') ?>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <?= $this->section('content') ?>
 <div class="container-fluid">
   <div class="row">
@@ -122,52 +122,121 @@
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row">             
+              <div class="form-group col-md-3">
+                <label for="country">Country</label>
+                <select name="country_id" id="country" class="form-control">
+                  <option value="">Select Country</option>
+                  <?php if (!empty($countries)): foreach ($countries as $co): ?>
+                      <option value="<?= esc($co['id']) ?>" <?= old('country_id') == $co['id'] ? 'selected' : '' ?>>
+                          <?= esc($co['name']) ?>
+                      </option>
+                  <?php endforeach; endif; ?>
+                </select>
+              </div>           
+              <div class="form-group col-md-3">
+                <label for="state">State</label>
+                <select name="state" id="state" class="form-control">
+                  <option value="">Select State</option>
+                </select>
+              </div>              
+              <div class="form-group col-md-3">
+                <label for="city">City</label>
+                <select name="city" id="city" class="form-control">
+                  <option value="">Select City</option>                  
+                </select>
+              </div>
               <div class="form-group col-md-3">
                 <label for="pincode">Pincode</label>
                 <input type="text" name="pincode" id="pincode" class="form-control" value="<?= old('pincode') ?>">
-              </div>
-              <div class="form-group col-md-3">
-                <label for="city">City</label>
-                <input type="text" name="city" id="city" class="form-control" value="<?= old('city') ?>">
-              </div>
-              <div class="form-group col-md-3">
-                <label for="state">State</label>
-                <input type="text" name="state" id="state" class="form-control" value="<?= old('state') ?>">
-              </div>
-              <div class="form-group col-md-3">
-                <label for="country">Country</label>
-                <input type="text" name="country" id="country" class="form-control" value="<?= old('country') ?>">
-              </div>
+              </div>   
             </div>
 
             <div class="form-row">              
-              <div class="form-group col-md-6">
+              <div class="form-group col-md-3">
                 <label for="payment_mode">Payment Mode</label>
                 <input type="text" name="payment_mode" id="payment_mode" class="form-control" value="<?= old('payment_mode') ?>">
+              </div>
+              <div class="form-group col-md-3">
+                <label for="registration_fee">Registration Fee</label>
+                <input type="number" step="0.01" name="registration_fee" id="registration_fee" class="form-control" value="<?= old('registration_fee') ?>">
+              </div>
+              <div class="form-group col-md-3">
+                <label for="accommodation_type">Type of Accommodation</label>
+                <input type="text" name="accommodation_type" id="accommodation_type" class="form-control" value="<?= old('accommodation_type') ?>">
+              </div>
+              <div class="form-group col-md-3">
+                <label for="status">Status</label>
+                <select name="status" id="status" class="form-control" required>
+                  <option value="active" <?= old('status') === 'active' ? 'selected' : '' ?>>Active</option>
+                  <option value="inactive" <?= old('status') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="primary_id_type">Primary ID Type</label>
+                <select name="primary_id_type" id="primary_id_type" class="form-control">
+                  <option value="">Select ID Type</option>
+                  <option value="Voter ID" <?= old('primary_id_type') === 'Voter ID' ? 'selected' : '' ?>>Voter ID</option>
+                  <option value="Driving License" <?= old('primary_id_type') === 'Driving License' ? 'selected' : '' ?>>Driving License</option>
+                  <option value="Passport" <?= old('primary_id_type') === 'Passport' ? 'selected' : '' ?>>Passport</option>
+                  <option value="PAN Card" <?= old('primary_id_type') === 'PAN Card' ? 'selected' : '' ?>>PAN Card</option>
+                </select>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="aadhaar_no">Aadhaar Card No.</label>
+                <input type="text" name="aadhaar_no" id="aadhaar_no" class="form-control" value="<?= old('aadhaar_no') ?>">
+              </div>
+              
+              <div class="form-group col-md-4">
+                <label for="primary_id_no">Primary ID No.</label>
+                <input type="text" name="primary_id_no" id="primary_id_no" class="form-control" value="<?= old('primary_id_no') ?>">
               </div>
             </div>
 
             <div class="form-row">
-              <div class="form-group col-md-6">
-                <label for="registration_fee">Registration Fee</label>
-                <input type="number" step="0.01" name="registration_fee" id="registration_fee" class="form-control" value="<?= old('registration_fee') ?>">
+              <div class="form-group col-md-4">
+                <label for="primary_id_file">Primary ID File (JPG/PNG/PDF, max 2MB)</label>
+                <input type="file" name="primary_id_file" id="primary_id_file" class="form-control-file">
+                <?php if (isset($validation) && $validation->hasError('primary_id_file')): ?>
+                  <small class="text-danger"><?= $validation->getError('primary_id_file') ?></small>
+                <?php endif; ?>
               </div>
-              <div class="form-group col-md-6">
-                <label for="accommodation_type">Type of Accommodation</label>
-                <input type="text" name="accommodation_type" id="accommodation_type" class="form-control" value="<?= old('accommodation_type') ?>">
+              <div class="form-group col-md-4">
+                <label for="secondary_id_type">Secondary ID Type</label>
+                <select name="secondary_id_type" id="secondary_id_type" class="form-control">
+                  <option value="">Select ID Type</option>
+                  <option value="Voter ID" <?= old('secondary_id_type') === 'Voter ID' ? 'selected' : '' ?>>Voter ID</option>
+                  <option value="Driving License" <?= old('secondary_id_type') === 'Driving License' ? 'selected' : '' ?>>Driving License</option>
+                  <option value="Passport" <?= old('secondary_id_type') === 'Passport' ? 'selected' : '' ?>>Passport</option>
+                  <option value="PAN Card" <?= old('secondary_id_type') === 'PAN Card' ? 'selected' : '' ?>>PAN Card</option>
+                </select>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="secondary_id_no">Secondary ID No.</label>
+                <input type="text" name="secondary_id_no" id="secondary_id_no" class="form-control" value="<?= old('secondary_id_no') ?>">
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="status">Status</label>
-              <select name="status" id="status" class="form-control" required>
-                <option value="active" <?= old('status') === 'active' ? 'selected' : '' ?>>Active</option>
-                <option value="inactive" <?= old('status') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
-              </select>
+            <div class="form-row">
+              <div class="form-group col-md-4">
+                <label for="secondary_id_file">Secondary ID File (JPG/PNG/PDF, max 2MB)</label>
+                <input type="file" name="secondary_id_file" id="secondary_id_file" class="form-control-file">
+                <?php if (isset($validation) && $validation->hasError('secondary_id_file')): ?>
+                  <small class="text-danger"><?= $validation->getError('secondary_id_file') ?></small>
+                <?php endif; ?>
+              </div>
+              <div class="form-group col-md-4">
+                <label for="aadhaar_file">Aadhaar Card File (JPG/PNG/PDF, max 2MB)</label>
+                <input type="file" name="aadhaar_file" id="aadhaar_file" class="form-control-file">
+                <?php if (isset($validation) && $validation->hasError('aadhaar_file')): ?>
+                  <small class="text-danger"><?= $validation->getError('aadhaar_file') ?></small>
+                <?php endif; ?>
+              </div>
             </div>
 
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between mt-4">
               <a href="<?= base_url('admin/users') ?>" class="btn btn-secondary">Back</a>
               <button type="submit" class="btn btn-primary">Save</button>
             </div>
@@ -179,3 +248,67 @@
   </div>
 </div>
 <?= $this->endSection() ?>
+<?= $this->section('scripts') ?>
+<script>
+$(document).ready(function() {
+    // Handle country change
+    $('#country').on('change', function() { 
+        var countryId   = $(this).val(); 
+        var stateSelect = $('#state');
+        
+        stateSelect.empty().append('<option value="">Select State</option>');
+        
+        if (countryId) { 
+          $.get('<?= base_url('admin/states/getByCountry/') ?>' + countryId, function(data) {
+            if (data && data.length > 0) { 
+              $.each(data, function(index, state) {
+                stateSelect.append('<option value="' + state.id + '">' + state.name + '</option>');
+              });
+            }
+          }, 'json');          
+        }
+    });
+
+    // Handle state change
+    $('#state').on('change', function() {
+        var stateId = $(this).val();
+        var citySelect = $('#city');
+        
+        citySelect.empty().append('<option value="">Select City</option>');
+        
+        if (stateId) {
+            $.ajax({
+                url: '<?= base_url('admin/cities/getByState/') ?>' + stateId,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data && data.length > 0) { 
+                        $.each(data, function(index, city) {
+                            citySelect.append('<option value="' + city.name + '">' + city.name + '</option>');
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading cities:', status, error);
+                }
+            });
+        }
+    });
+    
+    // Trigger change on page load if a country is already selected
+    if ($('#country').val()) {
+        $('#country').trigger('change');
+    }
+});
+</script>
+<?= $this->endSection() ?>
+
+<!-- // $(document).ready(function() {
+//     // Handle country change
+    
+    
+//     // Trigger change on page load if a country is already selected
+//     if ($('#country').val()) {
+//         $('#country').trigger('change');
+//     }
+// }); -->

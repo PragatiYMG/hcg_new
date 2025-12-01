@@ -155,4 +155,17 @@ class States extends Controller
         }
         return redirect()->to(base_url('admin/states'))->with('error', 'Failed to delete state');
     }
+
+    public function getByCountry($countryId)
+    {
+        $model = new StateModel();
+        $state = $model->find($id);
+        $states = $model->select('id, name')
+            ->where('country_id', $countryId)
+            ->where('status', 'active')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+        
+        return $this->response->setJSON($states);
+    }
 }

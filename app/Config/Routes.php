@@ -77,6 +77,7 @@ $routes->post('/admin/states/store', 'States::store');
 $routes->get('/admin/states/edit/(:num)', 'States::edit/$1');
 $routes->post('/admin/states/update/(:num)', 'States::update/$1');
 $routes->get('/admin/states/delete/(:num)', 'States::delete/$1');
+$routes->get('/admin/states/getByCountry/(:num)', 'States::getByCountry/$1');
 
 // Cities routes (separate controller)
 $routes->get('/admin/cities', 'Cities::index');
@@ -85,6 +86,7 @@ $routes->post('/admin/cities/store', 'Cities::store');
 $routes->get('/admin/cities/edit/(:num)', 'Cities::edit/$1');
 $routes->post('/admin/cities/update/(:num)', 'Cities::update/$1');
 $routes->get('/admin/cities/delete/(:num)', 'Cities::delete/$1');
+$routes->get('/admin/cities/getByState/(:num)', 'Cities::getByState/$1');
 
 // Banks routes (DataTable with AJAX CRUD)
 $routes->get('/admin/banks', 'Banks::index');
@@ -131,3 +133,4 @@ $routes->get('/admin/connection-statuses/create', 'ConnectionStatuses::create');
 $routes->post('/admin/connection-statuses/store', 'ConnectionStatuses::store');
 $routes->get('/admin/connection-statuses/edit/(:num)', 'ConnectionStatuses::edit/$1');
 $routes->post('/admin/connection-statuses/update/(:num)', 'ConnectionStatuses::update/$1');
+
