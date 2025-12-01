@@ -14,12 +14,8 @@ class ChargeModel extends Model
     protected $protectFields    = true;
 
     protected $allowedFields = [
-        'late_charge',
-        'average_charge',
-        'bounce_charge',
-        'no_of_days',
-        'annual_charges',
-        'minimum_charges',
+        'charge_name',
+        'charge_value',
         'created_date',
         'created_by',
         'updated_date',

@@ -15,7 +15,7 @@ class RateModel extends Model
 
     protected $allowedFields = [
         'basic_rate',
-        'rate',
+        'full_rate',
         'effective_date',
         'status',
         'created_date',
@@ -48,5 +48,16 @@ class RateModel extends Model
         $data['data']['updated_by'] = session()->get('admin_id');
         $data['data']['updated_date'] = date('Y-m-d H:i:s');
         return $data;
+    }
+
+    /**
+     * Get the currently active rate
+     */
+    public function getActiveRate()
+    {
+        return $this->where('status', 'active')
+                    ->where('effective_date <=', date('Y-m-d'))
+                    ->orderBy('effective_date', 'DESC')
+                    ->first();
     }
 }

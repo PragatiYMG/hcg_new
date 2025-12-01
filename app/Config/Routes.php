@@ -31,21 +31,11 @@ $routes->get('/admin/areas/edit/(:num)', 'Admin::editArea/$1');
 $routes->post('/admin/areas/update/(:num)', 'Admin::updateArea/$1');
 $routes->get('/admin/areas/delete/(:num)', 'Admin::deleteArea/$1');
 
-// Taxes routes (separate controller)
+// Taxes routes (AJAX-based management)
 $routes->get('/admin/taxes', 'Taxes::index');
-$routes->get('/admin/taxes/create', 'Taxes::create');
+$routes->get('/admin/taxes/getTaxes', 'Taxes::getTaxes');
 $routes->post('/admin/taxes/store', 'Taxes::store');
-$routes->get('/admin/taxes/edit/(:num)', 'Taxes::edit/$1');
 $routes->post('/admin/taxes/update/(:num)', 'Taxes::update/$1');
-$routes->get('/admin/taxes/delete/(:num)', 'Taxes::delete/$1');
-
-// Tax Types routes (separate controller)
-$routes->get('/admin/tax-types', 'TaxTypes::index');
-$routes->get('/admin/tax-types/create', 'TaxTypes::create');
-$routes->post('/admin/tax-types/store', 'TaxTypes::store');
-$routes->get('/admin/tax-types/edit/(:num)', 'TaxTypes::edit/$1');
-$routes->post('/admin/tax-types/update/(:num)', 'TaxTypes::update/$1');
-$routes->get('/admin/tax-types/delete/(:num)', 'TaxTypes::delete/$1');
 
 // Societies routes (separate controller)
 $routes->get('/admin/societies', 'Societies::index');
@@ -55,17 +45,17 @@ $routes->get('/admin/societies/edit/(:num)', 'Societies::edit/$1');
 $routes->post('/admin/societies/update/(:num)', 'Societies::update/$1');
 $routes->get('/admin/societies/delete/(:num)', 'Societies::delete/$1');
 
-// Rates routes (separate controller)
+// Rates routes (AJAX-based management)
 $routes->get('/admin/rates', 'Rates::index');
-$routes->get('/admin/rates/create', 'Rates::create');
+$routes->get('/admin/rates/getRates', 'Rates::getRates');
+$routes->get('/admin/rates/getTaxRates', 'Rates::getTaxRates');
 $routes->post('/admin/rates/store', 'Rates::store');
-$routes->get('/admin/rates/edit/(:num)', 'Rates::edit/$1');
 $routes->post('/admin/rates/update/(:num)', 'Rates::update/$1');
-$routes->get('/admin/rates/delete/(:num)', 'Rates::delete/$1');
 
-// Charges routes (list and edit only)
+// Charges routes (AJAX-based management)
 $routes->get('/admin/charges', 'Charges::index');
-$routes->get('/admin/charges/edit/(:num)', 'Charges::edit/$1');
+$routes->get('/admin/charges/getCharges', 'Charges::getCharges');
+$routes->post('/admin/charges/store', 'Charges::store');
 $routes->post('/admin/charges/update/(:num)', 'Charges::update/$1');
 
 // Bills routes (edit-focused)
@@ -97,3 +87,50 @@ $routes->get('/admin/cities/edit/(:num)', 'Cities::edit/$1');
 $routes->post('/admin/cities/update/(:num)', 'Cities::update/$1');
 $routes->get('/admin/cities/delete/(:num)', 'Cities::delete/$1');
 $routes->get('/admin/cities/getByState/(:num)', 'Cities::getByState/$1');
+
+// Banks routes (DataTable with AJAX CRUD)
+$routes->get('/admin/banks', 'Banks::index');
+$routes->get('/admin/banks/getTableData', 'Banks::getTableData');
+$routes->get('/admin/banks/getBank/(:num)', 'Banks::getBank/$1');
+$routes->post('/admin/banks/store', 'Banks::store');
+$routes->post('/admin/banks/update/(:num)', 'Banks::update/$1');
+$routes->get('/admin/banks/getBanksForDropdown', 'Banks::getBanksForDropdown');
+
+// Images routes (DataTable with AJAX CRUD)
+$routes->get('/admin/images', 'Images::index');
+$routes->get('/admin/images/getTableData', 'Images::getTableData');
+$routes->get('/admin/images/getImage/(:num)', 'Images::getImage/$1');
+$routes->post('/admin/images/store', 'Images::store');
+$routes->post('/admin/images/update/(:num)', 'Images::update/$1');
+$routes->get('/admin/images/getImagesForDropdown', 'Images::getImagesForDropdown');
+
+// Bills routes (Enhanced with versioning)
+$routes->get('/admin/bills', 'Bills::index');
+$routes->get('/admin/bills/getTableData', 'Bills::getTableData');
+$routes->get('/admin/bills/create', 'Bills::create');
+$routes->post('/admin/bills/store', 'Bills::store');
+$routes->get('/admin/bills/view/(:num)', 'Bills::view/$1');
+$routes->get('/admin/bills/edit/(:num)', 'Bills::edit/$1');
+$routes->post('/admin/bills/update/(:num)', 'Bills::update/$1');
+$routes->post('/admin/bills/activate/(:num)', 'Bills::activate/$1');
+$routes->post('/admin/bills/duplicate/(:num)', 'Bills::duplicate/$1');
+$routes->get('/admin/bills/getActiveBill', 'Bills::getActiveBill');
+$routes->get('/admin/bills/getBillByDate', 'Bills::getBillByDate');
+
+// Connection Fees routes (DataTable with AJAX CRUD)
+$routes->get('/admin/connection-fees', 'ConnectionFees::index');
+$routes->get('/admin/connection-fees/get-table-data', 'ConnectionFees::getTableData');
+$routes->get('/admin/connection-fees/create', 'ConnectionFees::create');
+$routes->post('/admin/connection-fees/store', 'ConnectionFees::store');
+$routes->get('/admin/connection-fees/edit/(:num)', 'ConnectionFees::edit/$1');
+$routes->post('/admin/connection-fees/update/(:num)', 'ConnectionFees::update/$1');
+$routes->get('/admin/connection-fees/get-active-fee', 'ConnectionFees::getActiveFee');
+
+// Connection Statuses routes (DataTable with AJAX CRUD - no delete)
+$routes->get('/admin/connection-statuses', 'ConnectionStatuses::index');
+$routes->get('/admin/connection-statuses/get-table-data', 'ConnectionStatuses::getTableData');
+$routes->get('/admin/connection-statuses/create', 'ConnectionStatuses::create');
+$routes->post('/admin/connection-statuses/store', 'ConnectionStatuses::store');
+$routes->get('/admin/connection-statuses/edit/(:num)', 'ConnectionStatuses::edit/$1');
+$routes->post('/admin/connection-statuses/update/(:num)', 'ConnectionStatuses::update/$1');
+
