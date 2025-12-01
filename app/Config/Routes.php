@@ -141,3 +141,27 @@ $routes->get('/admin/meter-contractors/create', 'MeterContractors::create');
 $routes->post('/admin/meter-contractors/store', 'MeterContractors::store');
 $routes->get('/admin/meter-contractors/edit/(:num)', 'MeterContractors::edit/$1');
 $routes->post('/admin/meter-contractors/update/(:num)', 'MeterContractors::update/$1');
+
+// Meter Manufacturers routes (DataTable with AJAX CRUD - no delete option)
+$routes->get('/admin/meter-manufacturers', 'MeterManufacturers::index');
+$routes->get('/admin/meter-manufacturers/get-table-data', 'MeterManufacturers::getTableData');
+$routes->get('/admin/meter-manufacturers/create', 'MeterManufacturers::create');
+$routes->post('/admin/meter-manufacturers/store', 'MeterManufacturers::store');
+$routes->get('/admin/meter-manufacturers/edit/(:num)', 'MeterManufacturers::edit/$1');
+$routes->post('/admin/meter-manufacturers/update/(:num)', 'MeterManufacturers::update/$1');
+
+// Stove Types routes (DataTable with AJAX CRUD - no delete option)
+$routes->get('/admin/stove-types', 'StoveTypes::index');
+$routes->get('/admin/stove-types/get-table-data', 'StoveTypes::getTableData');
+$routes->get('/admin/stove-types/create', 'StoveTypes::create');
+$routes->post('/admin/stove-types/store', 'StoveTypes::store');
+$routes->get('/admin/stove-types/edit/(:num)', 'StoveTypes::edit/$1');
+$routes->post('/admin/stove-types/update/(:num)', 'StoveTypes::update/$1');
+
+// Burner Counts routes (DataTable with AJAX CRUD - no delete option)
+$routes->get('/admin/burner-counts', 'BurnerCounts::index');
+$routes->get('/admin/burner-counts/get-table-data', 'BurnerCounts::getTableData');
+$routes->get('/admin/burner-counts/create', 'BurnerCounts::create');
+$routes->post('/admin/burner-counts/store', 'BurnerCounts::store');
+$routes->get('/admin/burner-counts/edit/(:num)', 'BurnerCounts::edit/$1');
+$routes->post('/admin/burner-counts/update/(:num)', 'BurnerCounts::update/$1');

@@ -3,10 +3,10 @@
 namespace App\Controllers;
 
 use CodeIgniter\Controller;
-use App\Models\MeterContractorModel;
+use App\Models\MeterManufacturerModel;
 use App\Models\SettingsModel;
 
-class MeterContractors extends Controller
+class MeterManufacturers extends Controller
 {
     public function __construct()
     {
@@ -28,7 +28,7 @@ class MeterContractors extends Controller
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
 
-        return view('admin/metercontractors/index', [
+        return view('admin/metermanufacturers/index', [
             'site_logo' => $site_logo,
         ]);
     }
@@ -37,7 +37,7 @@ class MeterContractors extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
-        $model = new MeterContractorModel();
+        $model = new MeterManufacturerModel();
 
         // DataTables parameters
         $draw = $this->request->getGet('draw');
@@ -53,14 +53,14 @@ class MeterContractors extends Controller
 
         // Build query with admin name join
         $builder = $model->builder();
-        $builder->select('meter_contractors.*, admins.name as created_by_name, meter_contractors.created_date')
-                ->join('admins', 'admins.id = meter_contractors.created_by', 'left');
+        $builder->select('meter_manufacturers.*, admins.name as created_by_name, meter_manufacturers.created_date')
+                ->join('admins', 'admins.id = meter_manufacturers.created_by', 'left');
 
         // Apply search
         if (!empty($search)) {
             $builder->groupStart()
-                    ->like('meter_contractors.name', $search)
-                    ->orLike('meter_contractors.status', $search)
+                    ->like('meter_manufacturers.name', $search)
+                    ->orLike('meter_manufacturers.status', $search)
                     ->groupEnd();
         }
 
@@ -71,19 +71,19 @@ class MeterContractors extends Controller
         $builder->orderBy($orderBy, $orderDir);
         $builder->limit($length, $start);
 
-        $contractors = $builder->get()->getResultArray();
+        $manufacturers = $builder->get()->getResultArray();
 
         $data = [];
-        foreach ($contractors as $contractor) {
-            $adminName = $contractor['created_by_name'] ?: 'System';
-            $dateTime = $contractor['created_date'] ? date('d M Y H:i', strtotime($contractor['created_date'])) : 'N/A';
+        foreach ($manufacturers as $manufacturer) {
+            $adminName = $manufacturer['created_by_name'] ?: 'System';
+            $dateTime = $manufacturer['created_date'] ? date('d M Y H:i', strtotime($manufacturer['created_date'])) : 'N/A';
             $createdInfo = '<small><strong>' . esc($adminName) . '</strong><br>' . $dateTime . '</small>';
             $data[] = [
-                'id' => $contractor['id'],
-                'name' => $contractor['name'],
-                'status' => $contractor['status'],
+                'id' => $manufacturer['id'],
+                'name' => $manufacturer['name'],
+                'status' => $manufacturer['status'],
                 'created_info' => $createdInfo,
-                'actions' => '<button class="btn btn-outline-primary btn-sm" onclick="editContractor(' . $contractor['id'] . ')"><i class="fas fa-edit"></i> Edit</button>'
+                'actions' => '<button class="btn btn-outline-primary btn-sm" onclick="editManufacturer(' . $manufacturer['id'] . ')"><i class="fas fa-edit"></i> Edit</button>'
             ];
         }
 
@@ -110,7 +110,7 @@ class MeterContractors extends Controller
 
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'name' => ['label' => 'Contractor Name', 'rules' => 'required|min_length[2]|max_length[150]'],
+            'name' => ['label' => 'Manufacturer Name', 'rules' => 'required|min_length[2]|max_length[150]'],
             'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
         ]);
 
@@ -121,7 +121,7 @@ class MeterContractors extends Controller
             ]);
         }
 
-        $model = new MeterContractorModel();
+        $model = new MeterManufacturerModel();
         $data = [
             'name' => $this->request->getPost('name'),
             'status' => $this->request->getPost('status'),
@@ -130,13 +130,13 @@ class MeterContractors extends Controller
         if ($model->insert($data)) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Meter contractor created successfully'
+                'message' => 'Meter manufacturer created successfully'
             ]);
         }
 
         return $this->response->setJSON([
             'success' => false,
-            'message' => 'Failed to create meter contractor'
+            'message' => 'Failed to create meter manufacturer'
         ]);
     }
 
@@ -144,19 +144,19 @@ class MeterContractors extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
-        $model = new MeterContractorModel();
-        $contractor = $model->find($id);
+        $model = new MeterManufacturerModel();
+        $manufacturer = $model->find($id);
 
-        if (!$contractor) {
+        if (!$manufacturer) {
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Contractor not found'
+                'message' => 'Manufacturer not found'
             ]);
         }
 
         return $this->response->setJSON([
             'success' => true,
-            'data' => $contractor
+            'data' => $manufacturer
         ]);
     }
 
@@ -166,7 +166,7 @@ class MeterContractors extends Controller
 
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'name' => ['label' => 'Contractor Name', 'rules' => 'required|min_length[2]|max_length[150]'],
+            'name' => ['label' => 'Manufacturer Name', 'rules' => 'required|min_length[2]|max_length[150]'],
             'status' => ['label' => 'Status', 'rules' => 'required|in_list[active,inactive]'],
         ]);
 
@@ -177,7 +177,7 @@ class MeterContractors extends Controller
             ]);
         }
 
-        $model = new MeterContractorModel();
+        $model = new MeterManufacturerModel();
         $data = [
             'name' => $this->request->getPost('name'),
             'status' => $this->request->getPost('status'),
@@ -186,13 +186,13 @@ class MeterContractors extends Controller
         if ($model->update($id, $data)) {
             return $this->response->setJSON([
                 'success' => true,
-                'message' => 'Meter contractor updated successfully'
+                'message' => 'Meter manufacturer updated successfully'
             ]);
         }
 
         return $this->response->setJSON([
             'success' => false,
-            'message' => 'Failed to update meter contractor'
+            'message' => 'Failed to update meter manufacturer'
         ]);
     }
 }
