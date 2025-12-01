@@ -167,4 +167,16 @@ class Cities extends Controller
         }
         return redirect()->to(base_url('admin/cities'))->with('error', 'Failed to delete city');
     }
+
+    public function getByState($stateId)
+    {
+        $model = new CityModel();
+        $cities = $model->select('id, name')
+            ->where('state_id', $stateId)
+            ->where('status', 'active')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+        
+        return $this->response->setJSON($cities);
+    }
 }

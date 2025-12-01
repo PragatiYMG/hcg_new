@@ -50,4 +50,16 @@ class StateModel extends Model
         $data['data']['updated_at'] = date('Y-m-d H:i:s');
         return $data;
     }
+
+    public function getByCountry($countryId)
+    {
+        $states = (new StateModel())
+            ->select('id, name')
+            ->where('country_id', $countryId)
+            ->where('status', 'active')
+            ->orderBy('name', 'ASC')
+            ->findAll();
+        
+        return $this->response->setJSON($states);
+    }
 }

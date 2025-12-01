@@ -126,22 +126,43 @@
               </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row">              
               <div class="form-group col-md-3">
-                <label for="pincode">Pincode</label>
-                <input type="text" name="pincode" id="pincode" class="form-control" value="<?= esc(old('pincode') ?? ($user['pincode'] ?? '')) ?>">
-              </div>
-              <div class="form-group col-md-3">
-                <label for="city">City</label>
-                <input type="text" name="city" id="city" class="form-control" value="<?= esc(old('city') ?? ($user['city'] ?? '')) ?>">
+                <label for="country">Country</label>
+                <?php $countryVal = old('country') !== null ? old('country') : ($user['country'] ?? ''); ?>
+                <select name="country" id="country" class="form-control">
+                  <option value="">Select Country</option>
+                  <?php if (!empty($countries)): foreach ($countries as $co): ?>
+                    <?php $val = $co['name'] ?? ''; ?>
+                    <option value="<?= esc($val) ?>" <?= $countryVal === $val ? 'selected' : '' ?>><?= esc($co['name'] ?? '') ?></option>
+                  <?php endforeach; endif; ?>
+                </select>
               </div>
               <div class="form-group col-md-3">
                 <label for="state">State</label>
-                <input type="text" name="state" id="state" class="form-control" value="<?= esc(old('state') ?? ($user['state'] ?? '')) ?>">
+                <?php $stateVal = old('state') !== null ? old('state') : ($user['state'] ?? ''); ?>
+                <select name="state" id="state" class="form-control">
+                  <option value="">Select State</option>
+                  <?php if (!empty($states)): foreach ($states as $st): ?>
+                    <?php $val = $st['name'] ?? ''; ?>
+                    <option value="<?= esc($val) ?>" <?= $stateVal === $val ? 'selected' : '' ?>><?= esc($st['name'] ?? '') ?></option>
+                  <?php endforeach; endif; ?>
+                </select>
               </div>
               <div class="form-group col-md-3">
-                <label for="country">Country</label>
-                <input type="text" name="country" id="country" class="form-control" value="<?= esc(old('country') ?? ($user['country'] ?? '')) ?>">
+                <label for="city">City</label>
+                <?php $cityVal = old('city') !== null ? old('city') : ($user['city'] ?? ''); ?>
+                <select name="city" id="city" class="form-control">
+                  <option value="">Select City</option>
+                  <?php if (!empty($cities)): foreach ($cities as $ci): ?>
+                    <?php $val = $ci['name'] ?? ''; ?>
+                    <option value="<?= esc($val) ?>" <?= $cityVal === $val ? 'selected' : '' ?>><?= esc($ci['name'] ?? '') ?></option>
+                  <?php endforeach; endif; ?>
+                </select>
+              </div>
+              <div class="form-group col-md-3">
+                <label for="pincode">Pincode</label>
+                <input type="text" name="pincode" id="pincode" class="form-control" value="<?= esc(old('pincode') ?? ($user['pincode'] ?? '')) ?>">
               </div>
             </div>
 
