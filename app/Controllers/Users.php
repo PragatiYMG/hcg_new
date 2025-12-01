@@ -6,6 +6,9 @@ use CodeIgniter\Controller;
 use App\Models\UserModel;
 use App\Models\SettingsModel;
 use App\Models\SocietyModel;
+use App\Models\CountryModel;
+use App\Models\StateModel;
+use App\Models\CityModel;
 
 class Users extends Controller
 {
@@ -65,9 +68,16 @@ class Users extends Controller
         $societyModel = new SocietyModel();
         $societies = $societyModel->where('status', 'active')->orderBy('society_name', 'ASC')->findAll();
 
+        $countries = (new CountryModel())->where('status','active')->orderBy('name','ASC')->findAll();
+        $states = (new StateModel())->where('status','active')->orderBy('name','ASC')->findAll();
+        $cities = (new CityModel())->where('status','active')->orderBy('name','ASC')->findAll();
+
         return view('admin/users/create', [
             'site_logo' => $site_logo,
             'societies' => $societies,
+            'countries' => $countries,
+            'states' => $states,
+            'cities' => $cities,
         ]);
     }
 
@@ -188,10 +198,17 @@ class Users extends Controller
         $societyModel = new SocietyModel();
         $societies = $societyModel->where('status', 'active')->orderBy('society_name', 'ASC')->findAll();
 
+        $countries = (new CountryModel())->where('status','active')->orderBy('name','ASC')->findAll();
+        $states = (new StateModel())->where('status','active')->orderBy('name','ASC')->findAll();
+        $cities = (new CityModel())->where('status','active')->orderBy('name','ASC')->findAll();
+
         return view('admin/users/edit', [
             'user' => $user,
             'site_logo' => $site_logo,
             'societies' => $societies,
+            'countries' => $countries,
+            'states' => $states,
+            'cities' => $cities,
         ]);
     }
 
