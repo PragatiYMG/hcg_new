@@ -15,6 +15,14 @@
                 </div>
                 <form action="<?= base_url('admin/areas/store') ?>" method="post">
                     <div class="card-body">
+                        <?php if (session()->getFlashdata('error')): ?>
+                            <div class="alert alert-danger alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5><i class="icon fas fa-ban"></i> Error!</h5>
+                                <?= session()->getFlashdata('error') ?>
+                            </div>
+                        <?php endif; ?>
+
                         <?php if (isset($errors) && !empty($errors)): ?>
                             <div class="alert alert-danger">
                                 <ul class="mb-0">
@@ -22,6 +30,15 @@
                                         <li><?= esc($error) ?></li>
                                     <?php endforeach; ?>
                                 </ul>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (session()->getFlashdata('warning')): ?>
+                            <div class="alert alert-warning alert-dismissible">
+                                <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+                                <h5><i class="icon fas fa-exclamation-triangle"></i> Warning!</h5>
+                                <?= session()->getFlashdata('warning') ?>
+                                <br><small>If you want to proceed anyway, click "Create Area" again.</small>
                             </div>
                         <?php endif; ?>
 
@@ -45,6 +62,20 @@
                             <?php if (isset($errors['status'])): ?>
                                 <div class="invalid-feedback">
                                     <?= $errors['status'] ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="visible_to_customer">Visible to Customer <span class="text-danger">*</span></label>
+                            <select class="form-control <?= isset($errors['visible_to_customer']) ? 'is-invalid' : '' ?>" id="visible_to_customer" name="visible_to_customer" required>
+                                <option value="">Select Visibility</option>
+                                <option value="yes" <?= old('visible_to_customer') == 'yes' ? 'selected' : '' ?>>Yes</option>
+                                <option value="no" <?= old('visible_to_customer') == 'no' ? 'selected' : '' ?>>No</option>
+                            </select>
+                            <?php if (isset($errors['visible_to_customer'])): ?>
+                                <div class="invalid-feedback">
+                                    <?= $errors['visible_to_customer'] ?>
                                 </div>
                             <?php endif; ?>
                         </div>

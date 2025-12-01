@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+    <!-- Toastr CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 
@@ -136,6 +138,11 @@
 
         .sidebar-search input::placeholder {
             color: #adb5bd;
+        }
+
+        /* Hide sidebar search for now */
+        .sidebar-search {
+            display: none;
         }
 
         .menu-section {
@@ -355,6 +362,28 @@
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Configure toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    </script>
 
     <!-- Menu Master JavaScript -->
     <script>
@@ -364,7 +393,7 @@
                 this.toggleButton = document.getElementById('menuToggle');
                 this.overlay = document.getElementById('menuOverlay');
                 this.mainContent = document.getElementById('mainContent');
-                this.searchInput = document.getElementById('menuSearch');
+                this.searchInput = document.getElementById('menuSearch'); // May be null if not present
                 this.sectionsContainer = document.getElementById('menuSections');
 
                 this.isCollapsed = false;
@@ -398,19 +427,16 @@
                         children: [
                             { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
                             { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
-                            { id: 'tax-types-list', title: 'Tax Types', icon: 'fas fa-plus', url: '<?= base_url("admin/tax-types") ?>', roles: ['admin'] },
+                            { id: 'connection-statuses-list', title: 'Connection Statuses', icon: 'fas fa-tasks', url: '<?= base_url("admin/connection-statuses") ?>', roles: ['admin'] },
+                            { id: 'connection-fees-list', title: 'Connection Fees', icon: 'fas fa-plug', url: '<?= base_url("admin/connection-fees") ?>', roles: ['admin'] },
                             { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
                             { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
-                            { id: 'bills-edit', title: 'Bill Settings', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills/edit/1") ?>', roles: ['admin'] },
+                            { id: 'taxes-list', title: 'Taxes', icon: 'fas fa-plus', url: '<?= base_url("admin/taxes") ?>', roles: ['admin'] },
+                            { id: 'banks-list', title: 'Banks', icon: 'fas fa-university', url: '<?= base_url("admin/banks") ?>', roles: ['admin'] },
+                            { id: 'images-list', title: 'Images', icon: 'fas fa-images', url: '<?= base_url("admin/images") ?>', roles: ['admin'] },
+                            { id: 'bills-list', title: 'Bill Management', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills") ?>', roles: ['admin'] },
                         ]
-                    },  
-                    { 
-                        id: 'taxes-list', 
-                        title: 'Taxes', 
-                        icon: 'fas fa-plus', 
-                        url: '<?= base_url("admin/taxes") ?>', 
-                        roles: ['admin'] 
-                    },                
+                    },
                     {
                         id: 'users',
                         title: 'User Management',
@@ -592,11 +618,13 @@
                     }
                 });
 
-                // Search
-                this.searchInput.addEventListener('input', (e) => {
-                    this.state.searchTerm = e.target.value.toLowerCase();
-                    this.updateSearchResults();
-                });
+                // Search (only if search input exists)
+                if (this.searchInput) {
+                    this.searchInput.addEventListener('input', (e) => {
+                        this.state.searchTerm = e.target.value.toLowerCase();
+                        this.updateSearchResults();
+                    });
+                }
 
                 // Keyboard navigation
                 this.menuElement.addEventListener('keydown', (e) => this.handleKeydown(e));
@@ -818,10 +846,13 @@
     </script>
 
     <script>
-      // Initialize DataTables on all tables marked with .datatable
+      // Initialize DataTables on all tables marked with .datatable (skip those with data-skip-auto-init)
       document.addEventListener('DOMContentLoaded', function() {
         if (window.jQuery && $.fn.DataTable) {
           $('.datatable').each(function() {
+            if ($(this).data('skip-auto-init')) {
+              return; // Skip this table
+            }
             $(this).DataTable({
               pageLength: 10,
               lengthChange: true,
@@ -834,6 +865,9 @@
         }
       });
     </script>
+
+    <!-- Page-specific scripts -->
+    <?= $this->renderSection('page-scripts', true) ?>
 
     <?= $this->renderSection('scripts', true) ?>
 </body>

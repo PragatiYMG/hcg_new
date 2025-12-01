@@ -6,7 +6,7 @@ use CodeIgniter\Model;
 
 class TaxModel extends Model
 {
-    protected $table            = 'taxes';
+    protected $table            = 'tax_types';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
     protected $returnType       = 'array';
@@ -14,10 +14,10 @@ class TaxModel extends Model
     protected $protectFields    = true;
 
     protected $allowedFields = [
-        'tax_type',
-        'tax_percentage',
-        'tax_description',
+        'type_name',
+        'tax_rate',
         'status',
+        'online_status',
         'created_date',
         'created_by',
         'updated_at',
@@ -25,7 +25,6 @@ class TaxModel extends Model
 
     protected bool $allowEmptyInserts = false;
 
-    // Timestamps (we manage created_date manually)
     protected $useTimestamps = false;
     protected $dateFormat    = 'datetime';
     protected $createdField  = 'created_date';

@@ -25,34 +25,67 @@ class Charges extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
-        $model = new ChargeModel();
-        $settingsModel = class_exists(SettingsModel::class) ? new SettingsModel() : null;
-        $site_logo = $settingsModel ? $settingsModel->getSetting('site_logo') : null;
+        $settingsModel = new SettingsModel();
+        $site_logo = $settingsModel->getSetting('site_logo');
 
-        $charges = $model->orderBy('id','DESC')->findAll();
-
-        return view('admin/charges/index', [
-            'charges' => $charges,
-            'site_logo' => $site_logo,
-        ]);
+        return view('admin/charges/index', ['site_logo' => $site_logo]);
     }
 
-    public function edit($id)
+    public function getCharges()
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
         $model = new ChargeModel();
-        $charge = $model->find($id);
-        if (!$charge) {
-            return redirect()->to(base_url('admin/charges'))->with('error', 'Charge record not found');
+        $charges = $model->orderBy('id', 'DESC')->findAll();
+
+        // Add admin names for display
+        $db = \Config\Database::connect();
+        foreach ($charges as &$charge) {
+            $createdAdmin = $db->table('admins')->select('name, username')->where('id', $charge['created_by'])->get()->getRowArray();
+            $charge['created_by_name'] = $createdAdmin ? ($createdAdmin['name'] ?? $createdAdmin['username']) : 'Unknown';
+
+            if (!empty($charge['updated_by'])) {
+                $updatedAdmin = $db->table('admins')->select('name, username')->where('id', $charge['updated_by'])->get()->getRowArray();
+                $charge['updated_by_name'] = $updatedAdmin ? ($updatedAdmin['name'] ?? $updatedAdmin['username']) : 'Unknown';
+            }
         }
 
-        $settingsModel = class_exists(SettingsModel::class) ? new SettingsModel() : null;
-        $site_logo = $settingsModel ? $settingsModel->getSetting('site_logo') : null;
+        return $this->response->setJSON(['success' => true, 'data' => $charges]);
+    }
 
-        return view('admin/charges/edit', [
-            'charge' => $charge,
-            'site_logo' => $site_logo,
+    public function store()
+    {
+        if ($redirect = $this->ensureAuth()) return $redirect;
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'charge_name'  => ['label' => 'Charge Name', 'rules' => 'required|min_length[2]|max_length[100]'],
+            'charge_value' => ['label' => 'Charge Value', 'rules' => 'required|decimal|greater_than_equal_to[0]'],
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'errors' => $validation->getErrors()
+            ]);
+        }
+
+        $model = new ChargeModel();
+        $data = [
+            'charge_name'  => $this->request->getPost('charge_name'),
+            'charge_value' => $this->request->getPost('charge_value'),
+        ];
+
+        if ($model->insert($data)) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Charge created successfully'
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to create charge'
         ]);
     }
 
@@ -60,34 +93,56 @@ class Charges extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        $model = new ChargeModel();
+        $charge = $model->find($id);
+
+        if (!$charge) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Charge not found'
+            ]);
+        }
+
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'late_charge'      => ['label' => 'Late Charge', 'rules' => 'required|decimal'],
-            'average_charge'   => ['label' => 'Average Charge', 'rules' => 'required|decimal'],
-            'bounce_charge'    => ['label' => 'Bounce Charge', 'rules' => 'required|decimal'],
-            'no_of_days'       => ['label' => 'No Of Days', 'rules' => 'required|is_natural'],
-            'annual_charges'   => ['label' => 'Annual Charges', 'rules' => 'required|decimal'],
-            'minimum_charges'  => ['label' => 'Minimum Charges', 'rules' => 'required|decimal'],
+            'charge_name'  => ['label' => 'Charge Name', 'rules' => 'required|min_length[2]|max_length[100]'],
+            'charge_value' => ['label' => 'Charge Value', 'rules' => 'required|decimal|greater_than_equal_to[0]'],
         ]);
 
         if (!$validation->withRequest($this->request)->run()) {
-            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+            return $this->response->setJSON([
+                'success' => false,
+                'errors' => $validation->getErrors()
+            ]);
         }
 
-        $model = new ChargeModel();
+        $newChargeName = $this->request->getPost('charge_name');
+        $newChargeValue = $this->request->getPost('charge_value');
+
+        // Check if charge value is being changed and show caution
+        $cautionMessage = '';
+        if ($charge['charge_value'] != $newChargeValue) {
+            $cautionMessage = "⚠️ CAUTION: Charge value changed from ₹{$charge['charge_value']} to ₹{$newChargeValue}. This will affect billing calculations.";
+        }
+
         $data = [
-            'late_charge'     => $this->request->getPost('late_charge'),
-            'average_charge'  => $this->request->getPost('average_charge'),
-            'bounce_charge'   => $this->request->getPost('bounce_charge'),
-            'no_of_days'      => $this->request->getPost('no_of_days'),
-            'annual_charges'  => $this->request->getPost('annual_charges'),
-            'minimum_charges' => $this->request->getPost('minimum_charges'),
+            'charge_name'  => $newChargeName,
+            'charge_value' => $newChargeValue,
+            'updated_date' => date('Y-m-d H:i:s'),
+            'updated_by'   => session()->get('admin_id')
         ];
 
         if ($model->update($id, $data)) {
-            return redirect()->to(base_url('admin/charges'))->with('success', 'Charges updated successfully');
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Charge updated successfully' . ($cautionMessage ? '. ' . $cautionMessage : ''),
+                'caution' => $cautionMessage
+            ]);
         }
 
-        return redirect()->back()->withInput()->with('error', 'Failed to update charges');
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to update charge'
+        ]);
     }
 }

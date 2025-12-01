@@ -170,10 +170,50 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
-        $areaModel = new AreaModel();
-        $areas = $areaModel->findAll();
+        // Handle CSV export
+        if ($this->request->getGet('export') === 'csv') {
+            return $this->exportAreasCsv();
+        }
 
-        return view('admin/areas/index', ['areas' => $areas]);
+        // Get filter parameters
+        $filters = [
+            'area_name' => $this->request->getGet('area_name'),
+            'status' => $this->request->getGet('status'),
+            'visible_to_customer' => $this->request->getGet('visible_to_customer'),
+            'created_from' => $this->request->getGet('created_from'),
+            'created_to' => $this->request->getGet('created_to'),
+        ];
+
+        // Build query with filters and society count
+        $db = \Config\Database::connect();
+        $query = $db->table('areas a')
+                    ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COUNT(s.id) as society_count')
+                    ->join('admins ca', 'ca.id = a.created_by', 'left')
+                    ->join('admins ua', 'ua.id = a.updated_by', 'left')
+                    ->join('societies s', 's.area_id = a.id AND s.deleted_at IS NULL', 'left')
+                    ->where('a.deleted_at', null)
+                    ->groupBy('a.id');
+
+        // Apply filters
+        if (!empty($filters['area_name'])) {
+            $query->like('a.area_name', $filters['area_name']);
+        }
+        if (!empty($filters['status'])) {
+            $query->where('a.status', $filters['status']);
+        }
+        if (!empty($filters['visible_to_customer'])) {
+            $query->where('a.visible_to_customer', $filters['visible_to_customer']);
+        }
+        if (!empty($filters['created_from'])) {
+            $query->where('a.created_date >=', $filters['created_from'] . ' 00:00:00');
+        }
+        if (!empty($filters['created_to'])) {
+            $query->where('a.created_date <=', $filters['created_to'] . ' 23:59:59');
+        }
+
+        $areas = $query->orderBy('a.id', 'DESC')->get()->getResultArray();
+
+        return view('admin/areas/index', ['areas' => $areas, 'filters' => $filters]);
     }
 
     public function createArea()
@@ -193,6 +233,23 @@ class Admin extends Controller
 
         $areaModel = new AreaModel();
 
+        // Check for duplicates and partial matches
+        $areaName = $this->request->getPost('area_name');
+        $areaModel = new AreaModel();
+
+        // Check for exact case-insensitive match
+        $existingArea = $areaModel->where('LOWER(area_name)', strtolower($areaName))->first();
+        if ($existingArea) {
+            return redirect()->back()->withInput()->with('error', 'An area with this name already exists (case-insensitive match).');
+        }
+
+        // Check for partial matches (similar names)
+        $partialMatches = $areaModel->like('area_name', $areaName, 'both')->findAll();
+        if (!empty($partialMatches)) {
+            $matchNames = array_column($partialMatches, 'area_name');
+            session()->setFlashdata('warning', 'Similar area names found: ' . implode(', ', $matchNames) . '. Do you want to proceed?');
+        }
+
         $validation = \Config\Services::validation();
         $validation->setRules([
             'area_name' => [
@@ -211,6 +268,14 @@ class Admin extends Controller
                     'required' => 'Status is required',
                     'in_list' => 'Status must be either active or inactive'
                 ]
+            ],
+            'visible_to_customer' => [
+                'label' => 'Visible to Customer',
+                'rules' => 'required|in_list[yes,no]',
+                'errors' => [
+                    'required' => 'Visible to customer is required',
+                    'in_list' => 'Visible to customer must be either yes or no'
+                ]
             ]
         ]);
 
@@ -220,7 +285,8 @@ class Admin extends Controller
 
         $data = [
             'area_name' => $this->request->getPost('area_name'),
-            'status' => $this->request->getPost('status')
+            'status' => $this->request->getPost('status'),
+            'visible_to_customer' => $this->request->getPost('visible_to_customer')
         ];
 
         if ($areaModel->insert($data)) {
@@ -254,6 +320,38 @@ class Admin extends Controller
 
         $areaModel = new AreaModel();
 
+        // Check for duplicates and partial matches (excluding current record)
+        $areaName = $this->request->getPost('area_name');
+        $newStatus = $this->request->getPost('status');
+
+        // Check if trying to disable area with active societies
+        if ($newStatus === 'inactive') {
+            $societyModel = new \App\Models\SocietyModel();
+            $activeSocieties = $societyModel->where('area_id', $id)
+                                           ->where('status', 'active')
+                                           ->countAllResults();
+            if ($activeSocieties > 0) {
+                return redirect()->back()->withInput()->with('error', 'Cannot disable this area because it has ' . $activeSocieties . ' active society(ies). Please disable or move the societies first.');
+            }
+        }
+
+        // Check for exact case-insensitive match (excluding current record)
+        $existingArea = $areaModel->where('LOWER(area_name)', strtolower($areaName))
+                                  ->where('id !=', $id)
+                                  ->first();
+        if ($existingArea) {
+            return redirect()->back()->withInput()->with('error', 'An area with this name already exists (case-insensitive match).');
+        }
+
+        // Check for partial matches (excluding current record)
+        $partialMatches = $areaModel->like('area_name', $areaName, 'both')
+                                    ->where('id !=', $id)
+                                    ->findAll();
+        if (!empty($partialMatches)) {
+            $matchNames = array_column($partialMatches, 'area_name');
+            session()->setFlashdata('warning', 'Similar area names found: ' . implode(', ', $matchNames) . '. Do you want to proceed?');
+        }
+
         $validation = \Config\Services::validation();
         $validation->setRules([
             'area_name' => [
@@ -272,6 +370,14 @@ class Admin extends Controller
                     'required' => 'Status is required',
                     'in_list' => 'Status must be either active or inactive'
                 ]
+            ],
+            'visible_to_customer' => [
+                'label' => 'Visible to Customer',
+                'rules' => 'required|in_list[yes,no]',
+                'errors' => [
+                    'required' => 'Visible to customer is required',
+                    'in_list' => 'Visible to customer must be either yes or no'
+                ]
             ]
         ]);
 
@@ -281,7 +387,8 @@ class Admin extends Controller
 
         $data = [
             'area_name' => $this->request->getPost('area_name'),
-            'status' => $this->request->getPost('status')
+            'status' => $this->request->getPost('status'),
+            'visible_to_customer' => $this->request->getPost('visible_to_customer')
         ];
 
         if ($areaModel->update($id, $data)) {
@@ -305,4 +412,85 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/areas'))->with('error', 'Failed to delete area');
         }
     }
+
+    private function exportAreasCsv()
+        {
+            // Get filter parameters
+            $filters = [
+                'area_name' => $this->request->getGet('area_name'),
+                'status' => $this->request->getGet('status'),
+                'visible_to_customer' => $this->request->getGet('visible_to_customer'),
+                'created_from' => $this->request->getGet('created_from'),
+                'created_to' => $this->request->getGet('created_to'),
+            ];
+    
+            // Build query with filters and society count (same as areas method)
+            $db = \Config\Database::connect();
+            $query = $db->table('areas a')
+                        ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COUNT(s.id) as society_count')
+                        ->join('admins ca', 'ca.id = a.created_by', 'left')
+                        ->join('admins ua', 'ua.id = a.updated_by', 'left')
+                        ->join('societies s', 's.area_id = a.id AND s.deleted_at IS NULL', 'left')
+                        ->where('a.deleted_at', null)
+                        ->groupBy('a.id');
+    
+            // Apply filters
+            if (!empty($filters['area_name'])) {
+                $query->like('a.area_name', $filters['area_name']);
+            }
+            if (!empty($filters['status'])) {
+                $query->where('a.status', $filters['status']);
+            }
+            if (!empty($filters['visible_to_customer'])) {
+                $query->where('a.visible_to_customer', $filters['visible_to_customer']);
+            }
+            if (!empty($filters['created_from'])) {
+                $query->where('a.created_date >=', $filters['created_from'] . ' 00:00:00');
+            }
+            if (!empty($filters['created_to'])) {
+                $query->where('a.created_date <=', $filters['created_to'] . ' 23:59:59');
+            }
+    
+            $areas = $query->orderBy('a.id', 'DESC')->get()->getResultArray();
+    
+            // Set headers for CSV download
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="areas_' . date('Y-m-d_H-i-s') . '.csv"');
+            header('Pragma: no-cache');
+            header('Expires: 0');
+    
+            // Open output stream
+            $output = fopen('php://output', 'w');
+    
+            // Write CSV headers
+            fputcsv($output, [
+                'ID',
+                'Area Name',
+                'Status',
+                'Visible to Customer',
+                'Societies Count',
+                'Created Date',
+                'Created By',
+                'Last Updated',
+                'Updated By'
+            ]);
+    
+            // Write data rows
+            foreach ($areas as $area) {
+                fputcsv($output, [
+                    $area['id'],
+                    $area['area_name'],
+                    ucfirst($area['status']),
+                    ucfirst($area['visible_to_customer']),
+                    $area['society_count'] ?? 0,
+                    $area['created_date'] ? date('d M Y H:i', strtotime($area['created_date'])) : 'N/A',
+                    $area['created_by_name'] ?? 'Unknown',
+                    $area['updated_at'] ? date('d M Y H:i', strtotime($area['updated_at'])) : 'Never updated',
+                    $area['updated_by_name'] ?? 'N/A'
+                ]);
+            }
+    
+            fclose($output);
+            exit();
+        }
 }

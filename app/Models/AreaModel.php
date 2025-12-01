@@ -12,7 +12,7 @@ class AreaModel extends Model
     protected $returnType       = 'array';
     protected $useSoftDeletes   = true;
     protected $protectFields    = true;
-    protected $allowedFields    = ['area_name', 'status', 'created_date', 'created_by'];
+    protected $allowedFields    = ['area_name', 'status', 'visible_to_customer', 'created_date', 'created_by', 'updated_by'];
 
     protected bool $allowEmptyInserts = false;
 
@@ -33,7 +33,7 @@ class AreaModel extends Model
     protected $allowCallbacks = true;
     protected $beforeInsert   = ['setCreatedFields'];
     protected $afterInsert    = [];
-    protected $beforeUpdate   = [];
+    protected $beforeUpdate   = ['setUpdatedFields'];
     protected $afterUpdate    = [];
     protected $beforeFind     = [];
     protected $afterFind      = [];
@@ -44,6 +44,12 @@ class AreaModel extends Model
     {
         $data['data']['created_by'] = session()->get('admin_id');
         $data['data']['created_date'] = date('Y-m-d H:i:s');
+        return $data;
+    }
+
+    protected function setUpdatedFields(array $data)
+    {
+        $data['data']['updated_by'] = session()->get('admin_id');
         return $data;
     }
 }
