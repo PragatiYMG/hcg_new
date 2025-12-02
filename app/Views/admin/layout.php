@@ -210,6 +210,21 @@
             display: none;
         }
 
+        .menu-link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            width: 100%;
+            padding: 12px 20px;
+            margin: -12px -20px;
+        }
+
+        .menu-link:hover {
+            text-decoration: none;
+            color: inherit;
+        }
+
         .main-content {
             margin-left: 250px;
             margin-top: 60px;
@@ -291,12 +306,12 @@
     <!-- Top Header -->
     <header class="top-header">
         <div class="container-fluid">
-            <div class="row align-items-center">
+            <div class="row align-items-center justify-content-between">
                 <div class="col-auto">
                     <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu">
                         <i class="fas fa-bars"></i>
                     </button>
-                    <?php 
+                    <?php
                         $logo = isset($site_logo) ? trim($site_logo) : '';
                         $logoUrl = $logo
                             ? (preg_match('/^https?:\/\//i', $logo) ? $logo : base_url('uploads/' . ltrim($logo, '/')))
@@ -307,27 +322,40 @@
                         Admin Panel
                     </a>
                 </div>
-                <div class="col-auto">
-                    <div class="header-actions">
-                        <button class="btn btn-link" title="Notifications">
-                            <i class="fas fa-bell"></i>
+                <div class="header-actions">
+                    <button class="btn btn-link" title="Notifications">
+                        <i class="fas fa-bell"></i>
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle d-flex align-items-center" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <?php
+                            $adminModel = new \App\Models\AdminModel();
+                            $admin = $adminModel->find(session()->get('admin_id'));
+                            $profilePic = isset($admin['profile_picture']) && $admin['profile_picture']
+                                ? base_url('uploads/Admin_Profile/' . $admin['profile_picture'])
+                                : null;
+                            ?>
+                            <?php if ($profilePic): ?>
+                                <img src="<?= esc($profilePic) ?>" alt="Profile" class="rounded-circle mr-2" style="width: 32px; height: 32px; object-fit: cover;">
+                            <?php else: ?>
+                                <i class="fas fa-user-circle mr-2"></i>
+                            <?php endif; ?>
+                            <span class="d-none d-md-inline"><?= session()->get('admin_username') ?></span>
                         </button>
-                        <div class="dropdown">
-                            <button class="btn btn-link dropdown-toggle" type="button" id="userDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-user-circle"></i> <?= session()->get('admin_username') ?>
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="<?= base_url('admin/profile') ?>">
-                                    <i class="fas fa-user-edit"></i> Profile
-                                </a>
-                                <a class="dropdown-item" href="<?= base_url('admin/settings') ?>">
-                                    <i class="fas fa-cog"></i> Settings
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="<?= base_url('admin/logout') ?>">
-                                    <i class="fas fa-sign-out-alt"></i> Logout
-                                </a>
-                            </div>
+                        <div class="dropdown-menu" aria-labelledby="userDropdown">
+                            <a class="dropdown-item" href="<?= base_url('admin/profile') ?>">
+                                <i class="fas fa-user-edit"></i> Profile
+                            </a>
+                            <a class="dropdown-item" href="#changePasswordModal" data-toggle="modal">
+                                <i class="fas fa-key"></i> Change Password
+                            </a>
+                            <a class="dropdown-item" href="<?= base_url('admin/settings') ?>">
+                                <i class="fas fa-cog"></i> Settings
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="<?= base_url('admin/logout') ?>">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -357,7 +385,7 @@
 
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- DataTables JS -->
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -428,6 +456,10 @@
                             { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
                             { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
                             { id: 'connection-statuses-list', title: 'Connection Statuses', icon: 'fas fa-tasks', url: '<?= base_url("admin/connection-statuses") ?>', roles: ['admin'] },
+                            { id: 'meter-contractors-list', title: 'Meter Contractors', icon: 'fas fa-tools', url: '<?= base_url("admin/meter-contractors") ?>', roles: ['admin'] },
+                            { id: 'meter-manufacturers-list', title: 'Meter Manufacturers', icon: 'fas fa-industry', url: '<?= base_url("admin/meter-manufacturers") ?>', roles: ['admin'] },
+                            { id: 'stove-types-list', title: 'Stove Types', icon: 'fas fa-fire', url: '<?= base_url("admin/stove-types") ?>', roles: ['admin'] },
+                            { id: 'burner-counts-list', title: 'Burner Counts', icon: 'fas fa-burn', url: '<?= base_url("admin/burner-counts") ?>', roles: ['admin'] },
                             { id: 'connection-fees-list', title: 'Connection Fees', icon: 'fas fa-plug', url: '<?= base_url("admin/connection-fees") ?>', roles: ['admin'] },
                             { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
                             { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
@@ -485,6 +517,35 @@
                                 icon: 'fas fa-images',
                                 url: '<?= base_url("admin/media") ?>',
                                 roles: ['admin', 'manager']
+                            }
+                        ]
+                    },
+                    {
+                        id: 'admin-users',
+                        title: 'Admin Users',
+                        icon: 'fas fa-user-shield',
+                        url: '<?= base_url("admin/admin-users") ?>',
+                        roles: ['super_admin']
+                    },
+                    {
+                        id: 'employee-management',
+                        title: 'Employee Management',
+                        icon: 'fas fa-users-cog',
+                        roles: ['super_admin', 'admin'],
+                        children: [
+                            {
+                                id: 'manage-employees',
+                                title: 'Manage Employees',
+                                icon: 'fas fa-user-friends',
+                                url: '<?= base_url("admin/admin-users") ?>',
+                                roles: ['super_admin', 'admin']
+                            },
+                            {
+                                id: 'employee-reports',
+                                title: 'Employee Reports',
+                                icon: 'fas fa-chart-bar',
+                                url: '<?= base_url("admin/employee-reports") ?>',
+                                roles: ['super_admin', 'admin']
                             }
                         ]
                     },
@@ -583,13 +644,16 @@
                 const isVisible = this.matchesSearch(item);
 
                 return `
-                    <li class="menu-item ${isActive ? 'active' : ''} ${isVisible ? '' : 'hidden'}" 
-                        data-item-id="${item.id}" 
-                        tabindex="0" 
-                        role="menuitem" 
-                        aria-current="${isActive ? 'page' : 'false'}">
+                    <li class="menu-item ${isActive ? 'active' : ''} ${isVisible ? '' : 'hidden'}"
+                        data-item-id="${item.id}"
+                        tabindex="0"
+                        role="menuitem"
+                        aria-current="${isActive ? 'page' : 'false'}"
+                        ${item.url ? `data-url="${item.url}"` : ''}>
+                        ${item.url ? `<a href="${item.url}" class="menu-link">` : ''}
                         <i class="${item.icon}"></i>
                         <span>${item.title}</span>
+                        ${item.url ? '</a>' : ''}
                     </li>
                 `;
             }
@@ -612,9 +676,21 @@
 
                 // Menu items
                 this.menuElement.addEventListener('click', (e) => {
-                    if (e.target.closest('.menu-item')) {
-                        const item = e.target.closest('.menu-item');
-                        this.handleItemClick(item.dataset.itemId);
+                    const menuItem = e.target.closest('.menu-item');
+                    if (menuItem) {
+                        e.stopPropagation(); // Prevent event bubbling to parent elements
+                        const itemId = menuItem.dataset.itemId;
+
+                        // If there's a direct link, let it handle navigation
+                        const link = menuItem.querySelector('.menu-link');
+                        if (link) {
+                            // Just update active state, let the link handle navigation
+                            this.setActiveItem(itemId);
+                            return;
+                        }
+
+                        // Otherwise handle via JavaScript
+                        this.handleItemClick(itemId);
                     }
                 });
 
@@ -866,9 +942,62 @@
       });
     </script>
 
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="changePasswordModal" tabindex="-1" role="dialog" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="<?= base_url('admin/profile/change-password') ?>" method="post">
+                    <?= csrf_field() ?>
+                    <div class="modal-body">
+                        <div id="passwordAlert" class="alert" style="display: none;" role="alert"></div>
+
+                        <div class="form-group">
+                            <label for="modal_current_password">Current Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="modal_current_password" name="current_password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modal_new_password">New Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="modal_new_password" name="new_password" required>
+                            <small class="form-text text-muted">Password must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="modal_confirm_password">Confirm New Password <span class="text-danger">*</span></label>
+                            <input type="password" class="form-control" id="modal_confirm_password" name="confirm_password" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-warning">Change Password</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Page-specific scripts -->
     <?= $this->renderSection('page-scripts', true) ?>
 
     <?= $this->renderSection('scripts', true) ?>
+
+    <script>
+        // Handle change password modal
+        $('#changePasswordModal').on('show.bs.modal', function () {
+            // Clear form when modal is shown
+            $('#changePasswordModal form')[0].reset();
+            $('#passwordAlert').hide();
+        });
+
+        $('#changePasswordModal form').on('submit', function(e) {
+            // Optional: Add client-side validation here if needed
+        });
+    </script>
 </body>
 </html>
