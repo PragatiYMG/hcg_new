@@ -12,6 +12,14 @@ $routes->get('/admin/login', 'Admin::login');
 $routes->post('/admin/authenticate', 'Admin::authenticate');
 $routes->get('/admin/dashboard', 'Admin::dashboard');
 $routes->get('/admin/logout', 'Admin::logout');
+$routes->get('/admin/profile', 'Admin::profile');
+$routes->post('/admin/profile/update', 'Admin::updateProfile');
+$routes->post('/admin/profile/change-password', 'Admin::changePassword');
+$routes->get('/admin/admin-users', 'Admin::adminUsers');
+$routes->get('/admin/admin-users/create', 'Admin::createAdminUser');
+$routes->post('/admin/admin-users/store', 'Admin::storeAdminUser');
+$routes->get('/admin/admin-users/edit/(:num)', 'Admin::editAdminUser/$1');
+$routes->post('/admin/admin-users/update/(:num)', 'Admin::updateAdminUser/$1');
 $routes->get('/admin/settings', 'Admin::settings');
 $routes->post('/admin/settings/update', 'Admin::updateSettings');
 

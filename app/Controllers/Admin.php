@@ -35,6 +35,7 @@ class Admin extends Controller
             session()->set([
                 'admin_id' => $admin['id'],
                 'admin_username' => $admin['username'],
+                'admin_role' => $admin['role'],
                 'admin_logged_in' => true
             ]);
 
@@ -61,6 +62,440 @@ class Admin extends Controller
     {
         session()->destroy();
         return redirect()->to(base_url('admin/login'));
+    }
+
+    public function profile()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $adminModel = new AdminModel();
+        $admin = $adminModel->find(session()->get('admin_id'));
+
+        return view('admin/profile', ['admin' => $admin]);
+    }
+
+    public function updateProfile()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $adminModel = new AdminModel();
+        $adminId = session()->get('admin_id');
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'username' => [
+                'label' => 'Username',
+                'rules' => 'required|min_length[3]|max_length[100]|is_unique[admins.username,id,' . $adminId . ']',
+                'errors' => [
+                    'required' => 'Username is required',
+                    'min_length' => 'Username must be at least 3 characters',
+                    'max_length' => 'Username cannot exceed 100 characters',
+                    'is_unique' => 'This username is already taken'
+                ]
+            ],
+            'name' => [
+                'label' => 'Name',
+                'rules' => 'required|min_length[2]|max_length[255]',
+                'errors' => [
+                    'required' => 'Name is required',
+                    'min_length' => 'Name must be at least 2 characters',
+                    'max_length' => 'Name cannot exceed 255 characters'
+                ]
+            ],
+            'email' => [
+                'label' => 'Email',
+                'rules' => 'required|valid_email|max_length[100]|is_unique[admins.email,id,' . $adminId . ']',
+                'errors' => [
+                    'required' => 'Email is required',
+                    'valid_email' => 'Please enter a valid email address',
+                    'max_length' => 'Email cannot exceed 100 characters',
+                    'is_unique' => 'This email is already registered'
+                ]
+            ],
+            'profile_picture' => [
+                'label' => 'Profile Picture',
+                'rules' => 'max_size[profile_picture,2048]|is_image[profile_picture]|mime_in[profile_picture,image/jpg,image/jpeg,image/png,image/webp]',
+                'errors' => [
+                    'max_size' => 'Profile picture size should not exceed 2MB',
+                    'is_image' => 'Please upload a valid image file',
+                    'mime_in' => 'Only JPG, JPEG, PNG and WebP images are allowed'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'username' => $this->request->getPost('username'),
+            'name' => $this->request->getPost('name'),
+            'email' => $this->request->getPost('email')
+        ];
+
+        // Handle profile picture upload
+        $profilePicture = $this->request->getFile('profile_picture');
+        if ($profilePicture->isValid() && !$profilePicture->hasMoved()) {
+            // Delete old profile picture if exists
+            $oldAdmin = $adminModel->find($adminId);
+            if ($oldAdmin && $oldAdmin['profile_picture'] && file_exists(ROOTPATH . 'public/uploads/Admin_Profile/' . $oldAdmin['profile_picture'])) {
+                unlink(ROOTPATH . 'public/uploads/Admin_Profile/' . $oldAdmin['profile_picture']);
+            }
+
+            $uploadPath = ROOTPATH . 'public/uploads/Admin_Profile/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            $newPictureName = 'profile_' . $adminId . '_' . time() . '.' . $profilePicture->getClientExtension();
+            $profilePicture->move($uploadPath, $newPictureName);
+            $data['profile_picture'] = $newPictureName;
+
+            // Update session with new profile picture
+            session()->set('admin_profile_picture', $newPictureName);
+        }
+
+        if ($adminModel->update($adminId, $data)) {
+            // Update session data
+            session()->set([
+                'admin_username' => $data['username'],
+                'admin_name' => $data['name'],
+                'admin_email' => $data['email']
+            ]);
+
+            return redirect()->back()->with('success', 'Profile updated successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to update profile');
+        }
+    }
+
+    public function changePassword()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'current_password' => [
+                'label' => 'Current Password',
+                'rules' => 'required',
+                'errors' => [
+                    'required' => 'Current password is required'
+                ]
+            ],
+            'new_password' => [
+                'label' => 'New Password',
+                'rules' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/]',
+                'errors' => [
+                    'required' => 'New password is required',
+                    'min_length' => 'Password must be at least 8 characters long',
+                    'regex_match' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+                ]
+            ],
+            'confirm_password' => [
+                'label' => 'Confirm Password',
+                'rules' => 'required|matches[new_password]',
+                'errors' => [
+                    'required' => 'Please confirm your new password',
+                    'matches' => 'Passwords do not match'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('password_errors', $validation->getErrors());
+        }
+
+        $adminModel = new AdminModel();
+        $adminId = session()->get('admin_id');
+        $admin = $adminModel->find($adminId);
+
+        // Verify current password
+        if (!password_verify($this->request->getPost('current_password'), $admin['password'])) {
+            return redirect()->back()->withInput()->with('password_errors', ['current_password' => 'Current password is incorrect']);
+        }
+
+        // Update password
+        $newPassword = password_hash($this->request->getPost('new_password'), PASSWORD_DEFAULT);
+        if ($adminModel->update($adminId, ['password' => $newPassword])) {
+            return redirect()->back()->with('password_success', 'Password changed successfully');
+        } else {
+            return redirect()->back()->withInput()->with('password_errors', ['general' => 'Failed to change password']);
+        }
+    }
+
+    public function adminUsers()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check if user has admin or super_admin role
+        $adminModel = new AdminModel();
+        $currentAdmin = $adminModel->find(session()->get('admin_id'));
+        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        $admins = $adminModel->findAll();
+
+        return view('admin/admin_users/index', ['admins' => $admins]);
+    }
+
+    public function createAdminUser()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check if user has admin or super_admin role
+        $adminModel = new AdminModel();
+        $currentAdmin = $adminModel->find(session()->get('admin_id'));
+        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        return view('admin/admin_users/create');
+    }
+
+    public function storeAdminUser()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check if user has admin or super_admin role
+        $adminModel = new AdminModel();
+        $currentAdmin = $adminModel->find(session()->get('admin_id'));
+        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'username' => [
+                'label' => 'Username',
+                'rules' => 'required|min_length[3]|max_length[100]|is_unique[admins.username]',
+                'errors' => [
+                    'required' => 'Username is required',
+                    'min_length' => 'Username must be at least 3 characters',
+                    'max_length' => 'Username cannot exceed 100 characters',
+                    'is_unique' => 'This username is already taken'
+                ]
+            ],
+            'name' => [
+                'label' => 'Name',
+                'rules' => 'required|min_length[2]|max_length[255]',
+                'errors' => [
+                    'required' => 'Name is required',
+                    'min_length' => 'Name must be at least 2 characters',
+                    'max_length' => 'Name cannot exceed 255 characters'
+                ]
+            ],
+            'email' => [
+                'label' => 'Email',
+                'rules' => 'required|valid_email|max_length[100]|is_unique[admins.email]',
+                'errors' => [
+                    'required' => 'Email is required',
+                    'valid_email' => 'Please enter a valid email address',
+                    'max_length' => 'Email cannot exceed 100 characters',
+                    'is_unique' => 'This email is already registered'
+                ]
+            ],
+            'password' => [
+                'label' => 'Password',
+                'rules' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/]',
+                'errors' => [
+                    'required' => 'Password is required',
+                    'min_length' => 'Password must be at least 8 characters long',
+                    'regex_match' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+                ]
+            ],
+            'confirm_password' => [
+                'label' => 'Confirm Password',
+                'rules' => 'required|matches[password]',
+                'errors' => [
+                    'required' => 'Please confirm the password',
+                    'matches' => 'Passwords do not match'
+                ]
+            ],
+            'role' => [
+                'label' => 'Role',
+                'rules' => 'required|in_list[super_admin,admin,employee]',
+                'errors' => [
+                    'required' => 'Role is required',
+                    'in_list' => 'Role must be either Super Admin, Admin, or Employee'
+                ]
+            ],
+            'profile_picture' => [
+                'label' => 'Profile Picture',
+                'rules' => 'max_size[profile_picture,2048]|is_image[profile_picture]|mime_in[profile_picture,image/jpg,image/jpeg,image/png,image/webp]',
+                'errors' => [
+                    'max_size' => 'Profile picture size should not exceed 2MB',
+                    'is_image' => 'Please upload a valid image file',
+                    'mime_in' => 'Only JPG, JPEG, PNG and WebP images are allowed'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'username' => $this->request->getPost('username'),
+            'name' => $this->request->getPost('name'),
+            'email' => $this->request->getPost('email'),
+            'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
+            'role' => $this->request->getPost('role')
+        ];
+
+        // Handle profile picture upload
+        $profilePicture = $this->request->getFile('profile_picture');
+        if ($profilePicture->isValid() && !$profilePicture->hasMoved()) {
+            $uploadPath = ROOTPATH . 'public/uploads/Admin_Profile/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            $newPictureName = 'profile_' . time() . '_' . rand(1000, 9999) . '.' . $profilePicture->getClientExtension();
+            $profilePicture->move($uploadPath, $newPictureName);
+            $data['profile_picture'] = $newPictureName;
+        }
+
+        if ($adminModel->insert($data)) {
+            return redirect()->to(base_url('admin/admin-users'))->with('success', 'Admin user created successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to create admin user');
+        }
+    }
+
+    public function editAdminUser($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check if user has admin or super_admin role
+        $adminModel = new AdminModel();
+        $currentAdmin = $adminModel->find(session()->get('admin_id'));
+        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        $admin = $adminModel->find($id);
+
+        if (!$admin) {
+            return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
+        }
+
+        return view('admin/admin_users/edit', ['admin' => $admin]);
+    }
+
+    public function updateAdminUser($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check if user has admin or super_admin role
+        $adminModel = new AdminModel();
+        $currentAdmin = $adminModel->find(session()->get('admin_id'));
+        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        }
+
+        $existingAdmin = $adminModel->find($id);
+        if (!$existingAdmin) {
+            return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
+        }
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'name' => [
+                'label' => 'Name',
+                'rules' => 'required|min_length[2]|max_length[255]',
+                'errors' => [
+                    'required' => 'Name is required',
+                    'min_length' => 'Name must be at least 2 characters',
+                    'max_length' => 'Name cannot exceed 255 characters'
+                ]
+            ],
+            'email' => [
+                'label' => 'Email',
+                'rules' => 'required|valid_email|max_length[100]|is_unique[admins.email,id,' . $id . ']',
+                'errors' => [
+                    'required' => 'Email is required',
+                    'valid_email' => 'Please enter a valid email address',
+                    'max_length' => 'Email cannot exceed 100 characters',
+                    'is_unique' => 'This email is already registered'
+                ]
+            ],
+            'role' => [
+                'label' => 'Role',
+                'rules' => 'required|in_list[super_admin,admin,employee]',
+                'errors' => [
+                    'required' => 'Role is required',
+                    'in_list' => 'Role must be either Super Admin, Admin, or Employee'
+                ]
+            ],
+            'profile_picture' => [
+                'label' => 'Profile Picture',
+                'rules' => 'max_size[profile_picture,2048]|is_image[profile_picture]|mime_in[profile_picture,image/jpg,image/jpeg,image/png,image/webp]',
+                'errors' => [
+                    'max_size' => 'Profile picture size should not exceed 2MB',
+                    'is_image' => 'Please upload a valid image file',
+                    'mime_in' => 'Only JPG, JPEG, PNG and WebP images are allowed'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'name' => $this->request->getPost('name'),
+            'email' => $this->request->getPost('email'),
+            'role' => $this->request->getPost('role')
+        ];
+
+        // Handle profile picture upload
+        $profilePicture = $this->request->getFile('profile_picture');
+        if ($profilePicture->isValid() && !$profilePicture->hasMoved()) {
+            // Delete old profile picture if exists
+            if ($existingAdmin['profile_picture'] && file_exists(ROOTPATH . 'public/uploads/Admin_Profile/' . $existingAdmin['profile_picture'])) {
+                unlink(ROOTPATH . 'public/uploads/Admin_Profile/' . $existingAdmin['profile_picture']);
+            }
+
+            $uploadPath = ROOTPATH . 'public/uploads/Admin_Profile/';
+            if (!is_dir($uploadPath)) {
+                mkdir($uploadPath, 0777, true);
+            }
+
+            $newPictureName = 'profile_' . time() . '_' . rand(1000, 9999) . '.' . $profilePicture->getClientExtension();
+            $profilePicture->move($uploadPath, $newPictureName);
+            $data['profile_picture'] = $newPictureName;
+        }
+
+        if ($adminModel->update($id, $data)) {
+            // If updating own profile, update session data
+            if ($id == session()->get('admin_id')) {
+                session()->set([
+                    'admin_name' => $data['name'],
+                    'admin_role' => $data['role']
+                ]);
+            }
+
+            return redirect()->to(base_url('admin/admin-users'))->with('success', 'Admin user updated successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to update admin user');
+        }
     }
 
     public function settings()
