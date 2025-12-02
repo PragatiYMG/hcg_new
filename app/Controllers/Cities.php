@@ -7,6 +7,7 @@ use App\Models\CityModel;
 use App\Models\CountryModel;
 use App\Models\StateModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Cities extends Controller
 {
@@ -95,6 +96,11 @@ class Cities extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('cities', $insertedId, 'City added: ' . $data['name']);
+
             return redirect()->to(base_url('admin/cities'))->with('success', 'City created successfully');
         }
         return redirect()->back()->withInput()->with('error', 'Failed to create city');
@@ -152,6 +158,10 @@ class Cities extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('cities', $id, 'City updated: ' . $data['name']);
+
             return redirect()->to(base_url('admin/cities'))->with('success', 'City updated successfully');
         }
         return redirect()->back()->withInput()->with('error', 'Failed to update city');

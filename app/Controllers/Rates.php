@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\RateModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Rates extends Controller
 {
@@ -123,6 +124,11 @@ class Rates extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('rates', $insertedId, 'Rate added: Basic ' . $data['basic_rate'] . ', Full ' . $data['full_rate']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Rate created successfully'
@@ -208,6 +214,10 @@ class Rates extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('rates', $id, 'Rate updated: Basic ' . $data['basic_rate'] . ', Full ' . $data['full_rate']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Rate updated successfully' . ($cautionMessage ? '. ' . $cautionMessage : ''),

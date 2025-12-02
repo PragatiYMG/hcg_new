@@ -6,6 +6,7 @@ use CodeIgniter\Controller;
 use App\Models\SocietyModel;
 use App\Models\AreaModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Societies extends Controller
 {
@@ -141,6 +142,11 @@ class Societies extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('societies', $insertedId, 'Society added: ' . $data['society_name']);
+
             return redirect()->to(base_url('admin/societies'))->with('success', 'Society created successfully');
         }
 
@@ -206,6 +212,10 @@ class Societies extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('societies', $id, 'Society updated: ' . $data['society_name']);
+
             return redirect()->to(base_url('admin/societies'))->with('success', 'Society updated successfully');
         }
 

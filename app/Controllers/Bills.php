@@ -6,6 +6,7 @@ use CodeIgniter\Controller;
 use App\Models\BillModel;
 use App\Models\SettingsModel;
 use App\Models\ImageModel;
+use App\Libraries\ActivityLogger;
 
 class Bills extends Controller
 {
@@ -195,6 +196,11 @@ class Bills extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('bills', $insertedId, 'Bill added: ' . $data['company_name'] . ' (v' . $version . ')');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Bill created successfully as draft'
@@ -370,6 +376,10 @@ class Bills extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('bills', $id, 'Bill updated: ' . $data['company_name']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Bill updated successfully'

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\ConnectionStatusModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class ConnectionStatuses extends Controller
 {
@@ -72,6 +73,11 @@ class ConnectionStatuses extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('connection_statuses', $insertedId, 'Connection status added: ' . $data['status_name'] . ' (Order: ' . $data['status_order'] . ')');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Connection status created successfully'
@@ -148,6 +154,10 @@ class ConnectionStatuses extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('connection_statuses', $id, 'Connection status updated: ' . $data['status_name']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Connection status updated successfully'

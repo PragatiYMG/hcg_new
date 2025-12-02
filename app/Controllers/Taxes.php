@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\TaxModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Taxes extends Controller
 {
@@ -113,6 +114,11 @@ class Taxes extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('tax_types', $insertedId, 'Tax added: ' . $data['type_name'] . ' (' . $data['tax_rate'] . '%)');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Tax created successfully'
@@ -203,6 +209,10 @@ class Taxes extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('tax_types', $id, 'Tax updated: ' . $data['type_name'] . ' (' . $data['tax_rate'] . '%)');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Tax updated successfully' . ($cautionMessage ? '. ' . $cautionMessage : ''),
