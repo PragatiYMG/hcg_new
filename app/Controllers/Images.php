@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\ImageModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Images extends Controller
 {
@@ -175,6 +176,11 @@ class Images extends Controller
             ];
 
             if ($model->insert($data)) {
+                $insertedId = $model->getInsertID();
+                // Log add activity
+                $activityLogger = new ActivityLogger();
+                $activityLogger->logAdd('images', $insertedId, 'Image uploaded: ' . $data['image_name']);
+
                 return $this->response->setJSON([
                     'success' => true,
                     'message' => 'Image uploaded successfully'
@@ -269,6 +275,10 @@ class Images extends Controller
         }
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('images', $id, 'Image updated: ' . $data['image_name']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Image updated successfully'

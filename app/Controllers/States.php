@@ -6,6 +6,7 @@ use CodeIgniter\Controller;
 use App\Models\StateModel;
 use App\Models\CountryModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class States extends Controller
 {
@@ -88,6 +89,11 @@ class States extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('states', $insertedId, 'State added: ' . $data['name']);
+
             return redirect()->to(base_url('admin/states'))->with('success', 'State created successfully');
         }
         return redirect()->back()->withInput()->with('error', 'Failed to create state');
@@ -140,6 +146,10 @@ class States extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('states', $id, 'State updated: ' . $data['name']);
+
             return redirect()->to(base_url('admin/states'))->with('success', 'State updated successfully');
         }
         return redirect()->back()->withInput()->with('error', 'Failed to update state');

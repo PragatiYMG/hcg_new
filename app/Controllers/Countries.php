@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\CountryModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Countries extends Controller
 {
@@ -72,6 +73,11 @@ class Countries extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('countries', $insertedId, 'Country added: ' . $data['name']);
+
             return redirect()->to(base_url('admin/countries'))->with('success', 'Country created successfully');
         }
 
@@ -121,6 +127,10 @@ class Countries extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('countries', $id, 'Country updated: ' . $data['name']);
+
             return redirect()->to(base_url('admin/countries'))->with('success', 'Country updated successfully');
         }
 

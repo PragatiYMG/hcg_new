@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\ChargeModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Charges extends Controller
 {
@@ -77,6 +78,11 @@ class Charges extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('charges', $insertedId, 'Charge added: ' . $data['charge_name'] . ' (₹' . $data['charge_value'] . ')');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Charge created successfully'
@@ -133,6 +139,10 @@ class Charges extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('charges', $id, 'Charge updated: ' . $data['charge_name'] . ' (₹' . $data['charge_value'] . ')');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Charge updated successfully' . ($cautionMessage ? '. ' . $cautionMessage : ''),

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\BankModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class Banks extends Controller
 {
@@ -144,6 +145,11 @@ class Banks extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('banks', $insertedId, 'Bank added: ' . $data['bank_name']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Bank added successfully'
@@ -191,6 +197,10 @@ class Banks extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('banks', $id, 'Bank updated: ' . $newBankName);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Bank updated successfully'

@@ -5,6 +5,7 @@ namespace App\Controllers;
 use CodeIgniter\Controller;
 use App\Models\ConnectionFeeModel;
 use App\Models\SettingsModel;
+use App\Libraries\ActivityLogger;
 
 class ConnectionFees extends Controller
 {
@@ -149,6 +150,11 @@ class ConnectionFees extends Controller
         ];
 
         if ($model->insert($data)) {
+            $insertedId = $model->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('connection_fees', $insertedId, 'Connection fee added: ₹' . $data['total_fee'] . ' (Effective: ' . $data['effective_date'] . ')');
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Connection fee created successfully'
@@ -204,6 +210,10 @@ class ConnectionFees extends Controller
         ];
 
         if ($model->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('connection_fees', $id, 'Connection fee status updated to: ' . $data['status']);
+
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Connection fee status updated successfully'

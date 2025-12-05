@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\AdminModel;
 use App\Models\SettingsModel;
 use App\Models\AreaModel;
+use App\Libraries\ActivityLogger;
 use CodeIgniter\Controller;
 
 class Admin extends Controller
@@ -38,6 +39,10 @@ class Admin extends Controller
                 'admin_role' => $admin['role'],
                 'admin_logged_in' => true
             ]);
+
+            // Log login activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logLogin($admin['id'], 'Admin logged in');
 
             return redirect()->to(base_url('admin/dashboard'));
         } else {
@@ -725,6 +730,11 @@ class Admin extends Controller
         ];
 
         if ($areaModel->insert($data)) {
+            $insertedId = $areaModel->getInsertID();
+            // Log add activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logAdd('areas', $insertedId, 'Area added: ' . $data['area_name']);
+
             return redirect()->to(base_url('admin/areas'))->with('success', 'Area created successfully');
         } else {
             return redirect()->back()->withInput()->with('error', 'Failed to create area');
@@ -827,6 +837,10 @@ class Admin extends Controller
         ];
 
         if ($areaModel->update($id, $data)) {
+            // Log edit activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('areas', $id, 'Area updated: ' . $data['area_name']);
+
             return redirect()->to(base_url('admin/areas'))->with('success', 'Area updated successfully');
         } else {
             return redirect()->back()->withInput()->with('error', 'Failed to update area');
