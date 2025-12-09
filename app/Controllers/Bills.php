@@ -27,6 +27,11 @@ class Bills extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         // Ensure at least one bill is active
         $model = new BillModel();
         $model->ensureActiveBill();
@@ -118,6 +123,11 @@ class Bills extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
 
@@ -134,6 +144,14 @@ class Bills extends Controller
     public function store()
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
 
         $validation = \Config\Services::validation();
         $validation->setRules([
@@ -293,6 +311,11 @@ class Bills extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $model = new BillModel();
         $bill = $model->find($id);
         if (!$bill) {
@@ -321,6 +344,14 @@ class Bills extends Controller
     public function update($id)
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
 
         $validation = \Config\Services::validation();
         $validation->setRules([
@@ -396,6 +427,14 @@ class Bills extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
+
         $model = new BillModel();
         $bill = $model->find($id);
 
@@ -432,6 +471,14 @@ class Bills extends Controller
     public function duplicate($id)
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('masters.view')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
 
         $model = new BillModel();
 

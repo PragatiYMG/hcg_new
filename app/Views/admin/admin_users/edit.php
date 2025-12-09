@@ -11,6 +11,15 @@
                     <h4 class="card-title mb-0">Edit User</h4>
                 </div>
                 <div class="card-body">
+                    <?php if (session()->getFlashdata('success')): ?>
+                        <div class="alert alert-success alert-dismissible fade show auto-hide" role="alert">
+                            <i class="fas fa-check-circle"></i> <?= session()->getFlashdata('success') ?>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if (session()->getFlashdata('error')): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <?= session()->getFlashdata('error') ?>
@@ -60,6 +69,21 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="mobile">Mobile Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['mobile']) ? 'is-invalid' : '' ?>" id="mobile" name="mobile" value="<?= old('mobile', esc($admin['mobile'] ?? '')) ?>" placeholder="e.g., 9876543210" required>
+                                    <?php if (isset(session()->getFlashdata('errors')['mobile'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['mobile'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <small class="form-text text-muted">Must be a valid 10-digit mobile number starting with 6, 7, 8, or 9.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="role">Role <span class="text-danger">*</span></label>
                                     <select class="form-control <?= isset(session()->getFlashdata('errors')['role']) ? 'is-invalid' : '' ?>" id="role" name="role" required>
                                         <option value="">Select Role</option>
@@ -74,6 +98,59 @@
                                     <?php endif; ?>
                                 </div>
                             </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sms_2fa_enabled">SMS 2FA <span class="text-danger">*</span></label>
+                                    <select class="form-control <?= isset(session()->getFlashdata('errors')['sms_2fa_enabled']) ? 'is-invalid' : '' ?>" id="sms_2fa_enabled" name="sms_2fa_enabled" required>
+                                        <option value="0" <?= old('sms_2fa_enabled', $admin['sms_2fa_enabled'] ?? 0) == 0 ? 'selected' : '' ?>>Disabled</option>
+                                        <option value="1" <?= old('sms_2fa_enabled', $admin['sms_2fa_enabled'] ?? 0) == 1 ? 'selected' : '' ?>>Enabled</option>
+                                    </select>
+                                    <?php if (isset(session()->getFlashdata('errors')['sms_2fa_enabled'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['sms_2fa_enabled'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <small class="form-text text-muted">Enable SMS-based two-factor authentication for this user.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="force_password_reset">Force Password Reset <span class="text-danger">*</span></label>
+                                    <select class="form-control <?= isset(session()->getFlashdata('errors')['force_password_reset']) ? 'is-invalid' : '' ?>" id="force_password_reset" name="force_password_reset" required>
+                                        <option value="0" <?= old('force_password_reset', $admin['force_password_reset'] ?? 0) == 0 ? 'selected' : '' ?>>No</option>
+                                        <option value="1" <?= old('force_password_reset', $admin['force_password_reset'] ?? 0) == 1 ? 'selected' : '' ?>>Yes</option>
+                                    </select>
+                                    <?php if (isset(session()->getFlashdata('errors')['force_password_reset'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['force_password_reset'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <small class="form-text text-muted">Force this user to change their password on next login.</small>
+                                </div>
+                            </div>
+                             <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="active">Active Status <span class="text-danger">*</span></label>
+                                    <select class="form-control <?= isset(session()->getFlashdata('errors')['active']) ? 'is-invalid' : '' ?>" id="active" name="active" required>
+                                        <option value="1" <?= old('active', $admin['active'] ?? 1) == 1 ? 'selected' : '' ?>>Active</option>
+                                        <option value="0" <?= old('active', $admin['active'] ?? 1) == 0 ? 'selected' : '' ?>>Inactive</option>
+                                    </select>
+                                    <?php if (isset(session()->getFlashdata('errors')['active'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['active'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <small class="form-text text-muted">Set the account status. Inactive users cannot login.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                           
                         </div>
 
                         <!-- Profile Picture Section -->
@@ -133,6 +210,18 @@ document.getElementById('profile_picture').addEventListener('change', function(e
     const fileName = e.target.files[0]?.name || 'Choose file...';
     const label = e.target.nextElementSibling;
     label.textContent = fileName;
+});
+
+// Auto-hide success notifications
+$(document).ready(function() {
+    $('.alert-success.auto-hide').each(function() {
+        var $alert = $(this);
+        setTimeout(function() {
+            $alert.fadeOut('slow', function() {
+                $alert.remove();
+            });
+        }, 5000); // Hide after 5 seconds
+    });
 });
 </script>
 <?= $this->endSection() ?>

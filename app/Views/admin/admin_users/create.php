@@ -11,6 +11,15 @@
                     <h4 class="card-title mb-0">Create New User</h4>
                 </div>
                 <div class="card-body">
+                    <?php if (session()->getFlashdata('success')): ?>
+                        <div class="alert alert-success alert-dismissible fade show auto-hide" role="alert">
+                            <i class="fas fa-check-circle"></i> <?= session()->getFlashdata('success') ?>
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    <?php endif; ?>
+
                     <?php if (session()->getFlashdata('error')): ?>
                         <div class="alert alert-danger alert-dismissible fade show" role="alert">
                             <?= session()->getFlashdata('error') ?>
@@ -65,6 +74,21 @@
 
                             <div class="col-md-6">
                                 <div class="form-group">
+                                    <label for="mobile">Mobile Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['mobile']) ? 'is-invalid' : '' ?>" id="mobile" name="mobile" value="<?= old('mobile') ?>" placeholder="e.g., 9876543210" required>
+                                    <?php if (isset(session()->getFlashdata('errors')['mobile'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['mobile'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                    <small class="form-text text-muted">Must be a valid 10-digit mobile number starting with 6, 7, 8, or 9.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
                                     <label for="role">Role <span class="text-danger">*</span></label>
                                     <select class="form-control <?= isset(session()->getFlashdata('errors')['role']) ? 'is-invalid' : '' ?>" id="role" name="role" required>
                                         <option value="">Select Role</option>
@@ -77,6 +101,30 @@
                                             <?= session()->getFlashdata('errors')['role'] ?>
                                         </div>
                                     <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sms_2fa_enabled">SMS 2FA</label>
+                                    <select class="form-control" id="sms_2fa_enabled" name="sms_2fa_enabled">
+                                        <option value="0" selected>Disabled</option>
+                                        <option value="1">Enabled</option>
+                                    </select>
+                                    <small class="form-text text-muted">Enable SMS-based two-factor authentication for this user.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="active">Active Status <span class="text-danger">*</span></label>
+                                    <select class="form-control" id="active" name="active" required>
+                                        <option value="1" selected>Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+                                    <small class="form-text text-muted">Set the account status. Inactive users cannot login.</small>
                                 </div>
                             </div>
                         </div>
@@ -143,6 +191,18 @@ document.getElementById('profile_picture').addEventListener('change', function(e
     const fileName = e.target.files[0]?.name || 'Choose file...';
     const label = e.target.nextElementSibling;
     label.textContent = fileName;
+});
+
+// Auto-hide success notifications
+$(document).ready(function() {
+    $('.alert-success.auto-hide').each(function() {
+        var $alert = $(this);
+        setTimeout(function() {
+            $alert.fadeOut('slow', function() {
+                $alert.remove();
+            });
+        }, 5000); // Hide after 5 seconds
+    });
 });
 </script>
 <?= $this->endSection() ?>

@@ -26,6 +26,11 @@ class Rates extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.rates')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
 
@@ -81,6 +86,11 @@ class Rates extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.rates')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $settingsModel = class_exists(SettingsModel::class) ? new SettingsModel() : null;
         $site_logo = $settingsModel ? $settingsModel->getSetting('site_logo') : null;
 
@@ -92,6 +102,14 @@ class Rates extends Controller
     public function store()
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('masters.rates')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
 
         $validation = \Config\Services::validation();
         $validation->setRules([
@@ -145,6 +163,11 @@ class Rates extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('masters.rates')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $model = new RateModel();
         $rate = $model->find($id);
         if (!$rate) {
@@ -163,6 +186,14 @@ class Rates extends Controller
     public function update($id)
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('masters.rates')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
 
         $model = new RateModel();
         $rate = $model->find($id);

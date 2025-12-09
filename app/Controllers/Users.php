@@ -46,6 +46,11 @@ class Users extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('users.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $model = new UserModel();
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
@@ -61,6 +66,11 @@ class Users extends Controller
     public function create()
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('users.create')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
 
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
@@ -84,6 +94,11 @@ class Users extends Controller
     public function store()
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('users.create')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
 
         $validation = \Config\Services::validation();
         $validation->setRules([
@@ -186,6 +201,11 @@ class Users extends Controller
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
 
+        // Check permission
+        if (!hasPermission('users.edit')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         $model = new UserModel();
         $user = $model->find($id);
         if (!$user) {
@@ -215,6 +235,11 @@ class Users extends Controller
     public function update($id)
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('users.edit')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
 
         $validation = \Config\Services::validation();
         // Uniqueness with ignore current record
@@ -312,6 +337,11 @@ class Users extends Controller
     public function delete($id)
     {
         if ($redirect = $this->ensureAuth()) return $redirect;
+
+        // Check permission
+        if (!hasPermission('users.delete')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
 
         $model = new UserModel();
         if ($model->delete($id)) {

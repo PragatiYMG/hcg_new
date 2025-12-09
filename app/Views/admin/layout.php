@@ -427,10 +427,11 @@
                 this.isCollapsed = false;
                 this.isMobile = window.innerWidth <= 768;
                 this.currentUserRole = options.userRole || 'admin';
+                this.userPermissions = options.userPermissions || [];
 
                 this.menuData = options.menuData || this.getDefaultMenuData();
                 this.state = {
-                    collapsedSections: new Set(),
+                    openSection: null, // Only one section can be open at a time
                     activeItem: null,
                     searchTerm: ''
                 };
@@ -445,107 +446,70 @@
                         title: 'Dashboard',
                         icon: 'fas fa-tachometer-alt',
                         url: '<?= base_url("admin/dashboard") ?>',
-                        roles: ['admin', 'manager', 'user']
+                        permission: 'dashboard.view'
                     },
                     {
                         id: 'masters',
                         title: 'Masters',
                         icon: 'fab fa-superpowers',
-                        roles: ['admin'],
                         children: [
-                            { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', roles: ['admin', 'manager'] },
-                            { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', roles: ['admin'] },
-                            { id: 'connection-statuses-list', title: 'Connection Statuses', icon: 'fas fa-tasks', url: '<?= base_url("admin/connection-statuses") ?>', roles: ['admin'] },
-                            { id: 'meter-contractors-list', title: 'Meter Contractors', icon: 'fas fa-tools', url: '<?= base_url("admin/meter-contractors") ?>', roles: ['admin'] },
-                            { id: 'meter-manufacturers-list', title: 'Meter Manufacturers', icon: 'fas fa-industry', url: '<?= base_url("admin/meter-manufacturers") ?>', roles: ['admin'] },
-                            { id: 'stove-types-list', title: 'Stove Types', icon: 'fas fa-fire', url: '<?= base_url("admin/stove-types") ?>', roles: ['admin'] },
-                            { id: 'burner-counts-list', title: 'Burner Counts', icon: 'fas fa-burn', url: '<?= base_url("admin/burner-counts") ?>', roles: ['admin'] },
-                            { id: 'connection-fees-list', title: 'Connection Fees', icon: 'fas fa-plug', url: '<?= base_url("admin/connection-fees") ?>', roles: ['admin'] },
-                            { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', roles: ['admin'] },
-                            { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', roles: ['admin'] },
-                            { id: 'taxes-list', title: 'Taxes', icon: 'fas fa-plus', url: '<?= base_url("admin/taxes") ?>', roles: ['admin'] },
-                            { id: 'banks-list', title: 'Banks', icon: 'fas fa-university', url: '<?= base_url("admin/banks") ?>', roles: ['admin'] },
-                            { id: 'images-list', title: 'Images', icon: 'fas fa-images', url: '<?= base_url("admin/images") ?>', roles: ['admin'] },
-                            { id: 'bills-list', title: 'Bill Management', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills") ?>', roles: ['admin'] },
+                            { id: 'areas-list', title: 'Areas', icon: 'fas fa-map-marker-alt', url: '<?= base_url("admin/areas") ?>', permission: 'masters.areas' },
+                            { id: 'societies-list', title: 'Societies', icon: 'fas fa-city', url: '<?= base_url("admin/societies") ?>', permission: 'masters.societies' },
+                            { id: 'connection-statuses-list', title: 'Connection Statuses', icon: 'fas fa-tasks', url: '<?= base_url("admin/connection-statuses") ?>', permission: 'masters.connection_statuses' },
+                            { id: 'meter-contractors-list', title: 'Meter Contractors', icon: 'fas fa-tools', url: '<?= base_url("admin/meter-contractors") ?>', permission: 'masters.meter_contractors' },
+                            { id: 'meter-manufacturers-list', title: 'Meter Manufacturers', icon: 'fas fa-industry', url: '<?= base_url("admin/meter-manufacturers") ?>', permission: 'masters.meter_manufacturers' },
+                            { id: 'stove-types-list', title: 'Stove Types', icon: 'fas fa-fire', url: '<?= base_url("admin/stove-types") ?>', permission: 'masters.stove_types' },
+                            { id: 'burner-counts-list', title: 'Burner Counts', icon: 'fas fa-burn', url: '<?= base_url("admin/burner-counts") ?>', permission: 'masters.burner_counts' },
+                            { id: 'connection-fees-list', title: 'Connection Fees', icon: 'fas fa-plug', url: '<?= base_url("admin/connection-fees") ?>', permission: 'masters.connection_fees' },
+                            { id: 'rates-list', title: 'Rates', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/rates") ?>', permission: 'masters.rates' },
+                            { id: 'charges', title: 'Charges', icon: 'fas fa-rupee-sign', url: '<?= base_url("admin/charges") ?>', permission: 'masters.charges' },
+                            { id: 'taxes-list', title: 'Taxes', icon: 'fas fa-plus', url: '<?= base_url("admin/taxes") ?>', permission: 'masters.taxes' },
+                            { id: 'banks-list', title: 'Banks', icon: 'fas fa-university', url: '<?= base_url("admin/banks") ?>', permission: 'masters.banks' },
+                            { id: 'images-list', title: 'Images', icon: 'fas fa-images', url: '<?= base_url("admin/images") ?>', permission: 'masters.images' },
+                            { id: 'bills-list', title: 'Bill Management', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills") ?>', permission: 'bills.view' },
                         ]
                     },
                     {
                         id: 'users',
                         title: 'User Management',
                         icon: 'fas fa-users',
-                        roles: ['admin'],
+                        permission: 'users.view',
                         children: [
                             {
                                 id: 'all-users',
                                 title: 'All Users',
                                 icon: 'fas fa-users',
                                 url: '<?= base_url("admin/users") ?>',
-                                roles: ['admin']
-                            },
-                            {
-                                id: 'roles',
-                                title: 'Roles & Permissions',
-                                icon: 'fas fa-user-shield',
-                                url: '<?= base_url("admin/roles") ?>',
-                                roles: ['admin']
+                                permission: 'users.view'
                             }
                         ]
-                    },               
-                    {
-                        id: 'content',
-                        title: 'Content Management',
-                        icon: 'fas fa-edit',
-                        roles: ['admin', 'manager'],
-                        children: [
-                            {
-                                id: 'pages',
-                                title: 'Pages',
-                                icon: 'fas fa-file-alt',
-                                url: '<?= base_url("admin/pages") ?>',
-                                roles: ['admin', 'manager']
-                            },
-                            {
-                                id: 'posts',
-                                title: 'Posts',
-                                icon: 'fas fa-newspaper',
-                                url: '<?= base_url("admin/posts") ?>',
-                                roles: ['admin', 'manager']
-                            },
-                            {
-                                id: 'media',
-                                title: 'Media Library',
-                                icon: 'fas fa-images',
-                                url: '<?= base_url("admin/media") ?>',
-                                roles: ['admin', 'manager']
-                            }
-                        ]
-                    },
-                    {
-                        id: 'admin-users',
-                        title: 'Admin Users',
-                        icon: 'fas fa-user-shield',
-                        url: '<?= base_url("admin/admin-users") ?>',
-                        roles: ['super_admin']
                     },
                     {
                         id: 'employee-management',
                         title: 'Employee Management',
                         icon: 'fas fa-users-cog',
-                        roles: ['super_admin', 'admin'],
+                        permission: 'admin_users.view', // Require admin users permission to show section
                         children: [
                             {
                                 id: 'manage-employees',
                                 title: 'Manage Employees',
                                 icon: 'fas fa-user-friends',
                                 url: '<?= base_url("admin/admin-users") ?>',
-                                roles: ['super_admin', 'admin']
+                                permission: 'admin_users.view'
+                            },
+                            {
+                                id: 'access-management',
+                                title: 'Access Management',
+                                icon: 'fas fa-shield-alt',
+                                url: '<?= base_url("admin/access-management") ?>',
+                                permission: 'access.view'
                             },
                             {
                                 id: 'employee-reports',
                                 title: 'Employee Reports',
                                 icon: 'fas fa-chart-bar',
                                 url: '<?= base_url("admin/employee-reports") ?>',
-                                roles: ['super_admin', 'admin']
+                                permission: 'reports.employee'
                             }
                         ]
                     },
@@ -553,21 +517,21 @@
                         id: 'settings',
                         title: 'Manage Settings',
                         icon: 'fas fa-cog',
-                        roles: ['admin'],
+                        permission: 'settings.view',
                         children: [
                             {
                                 id: 'general',
                                 title: 'General',
                                 icon: 'fas fa-cogs',
                                 url: '<?= base_url("admin/settings") ?>',
-                                roles: ['admin']
+                                permission: 'settings.view'
                             },
                             {
                                 id: 'system',
                                 title: 'System',
                                 icon: 'fas fa-server',
                                 url: '<?= base_url("admin/settings/system") ?>',
-                                roles: ['admin']
+                                permission: 'settings.view'
                             }
                         ]
                     },
@@ -576,7 +540,7 @@
                         title: 'Logs',
                         icon: 'fas fa-list-alt',
                         url: '<?= base_url("admin/logs") ?>',
-                        roles: ['admin']
+                        permission: 'logs.view'
                     }
                 ];
             }
@@ -589,28 +553,43 @@
             }
 
             renderMenu() {
-                const filteredMenu = this.filterMenuByRole(this.menuData);
+                const filteredMenu = this.filterMenuByPermissions(this.menuData);
                 const html = filteredMenu.map(section => this.renderMenuSection(section)).join('');
                 this.sectionsContainer.innerHTML = html;
             }
 
-            filterMenuByRole(menuData) {
+            filterMenuByPermissions(menuData) {
+                // Super admin sees everything
+                if (this.currentUserRole === 'super_admin') {
+                    return menuData;
+                }
+
                 return menuData.filter(item => {
-                    if (item.roles && !item.roles.includes(this.currentUserRole)) {
-                        return false;
+                    // Check if user has permission for this menu item
+                    if (item.permission) {
+                        const hasPermission = this.userPermissions.some(perm => perm.name === item.permission);
+                        if (!hasPermission) {
+                            return false;
+                        }
                     }
+
+                    // Check children permissions
                     if (item.children) {
-                        item.children = item.children.filter(child =>
-                            !child.roles || child.roles.includes(this.currentUserRole)
-                        );
+                        item.children = item.children.filter(child => {
+                            if (child.permission) {
+                                return this.userPermissions.some(perm => perm.name === child.permission);
+                            }
+                            return true;
+                        });
                         return item.children.length > 0;
                     }
+
                     return true;
                 });
             }
 
             renderMenuSection(section) {
-                const isCollapsed = this.state.collapsedSections.has(section.id);
+                const isCollapsed = this.state.openSection !== section.id;
                 const hasChildren = section.children && section.children.length > 0;
 
                 let html = `
@@ -729,25 +708,30 @@
             }
 
             toggleSection(sectionId) {
-                if (this.state.collapsedSections.has(sectionId)) {
-                    this.state.collapsedSections.delete(sectionId);
+                if (this.state.openSection === sectionId) {
+                    // Closing the currently open section
+                    this.state.openSection = null;
                 } else {
-                    this.state.collapsedSections.add(sectionId);
+                    // Opening a different section (closes any currently open section)
+                    this.state.openSection = sectionId;
                 }
-                this.updateSectionVisibility(sectionId);
+
+                this.updateSectionVisibility();
                 this.saveState();
             }
 
-            updateSectionVisibility(sectionId) {
-                const section = this.menuElement.querySelector(`[data-section-id="${sectionId}"]`);
-                if (section) {
-                    const isCollapsed = this.state.collapsedSections.has(sectionId);
+            updateSectionVisibility() {
+                // Update all sections based on openSection state
+                const allSections = this.menuElement.querySelectorAll('.menu-section[data-section-id]');
+                allSections.forEach(section => {
+                    const secId = section.dataset.sectionId;
+                    const isCollapsed = this.state.openSection !== secId;
                     section.classList.toggle('collapsed', isCollapsed);
                     const header = section.querySelector('.menu-section-header');
                     if (header) {
                         header.setAttribute('aria-expanded', !isCollapsed);
                     }
-                }
+                });
             }
 
             handleItemClick(itemId) {
@@ -810,6 +794,14 @@
                     if (activeElement) {
                         activeElement.classList.add('active');
                         activeElement.setAttribute('aria-current', 'true');
+
+                        // Auto-expand the section containing the active item
+                        const section = activeElement.closest('.menu-section');
+                        if (section) {
+                            const sectionId = section.dataset.sectionId;
+                            this.state.openSection = sectionId;
+                            this.updateSectionVisibility();
+                        }
                     }
                 }
             }
@@ -884,7 +876,7 @@
 
             saveState() {
                 const state = {
-                    collapsedSections: Array.from(this.state.collapsedSections),
+                    openSection: this.state.openSection,
                     isCollapsed: this.isCollapsed
                 };
                 localStorage.setItem('menuMasterState', JSON.stringify(state));
@@ -894,9 +886,10 @@
                 const saved = localStorage.getItem('menuMasterState');
                 if (saved) {
                     const state = JSON.parse(saved);
-                    this.state.collapsedSections = new Set(state.collapsedSections || []);
+                    this.state.openSection = state.openSection || null;
                     this.isCollapsed = state.isCollapsed || false;
                 }
+                // Default: no section open
             }
 
             updateMenuData(newMenuData) {
@@ -912,8 +905,12 @@
 
         // Initialize Menu Master when DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            // Get user permissions
+            const userPermissions = <?= json_encode(getUserPermissions()) ?>;
+
             const menuMaster = new MenuMaster({
-                userRole: '<?= session()->get('admin_role') ?: 'admin' ?>'
+                userRole: '<?= session()->get('admin_role') ?: 'admin' ?>',
+                userPermissions: userPermissions
             });
 
             // Make menuMaster available globally for dynamic updates

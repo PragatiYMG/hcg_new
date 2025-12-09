@@ -121,14 +121,14 @@
                                             </small>
                                         </td>
                                         <td>
-                                            <?php if (!empty($area['updated_at'])): ?>
-                                                <small>
+                                            <small>
+                                                <?php if (!empty($area['updated_at'])): ?>
                                                     <strong><?= esc($area['updated_by_name'] ?? 'Unknown') ?></strong><br>
                                                     <?= date('d M Y H:i', strtotime($area['updated_at'])) ?>
-                                                </small>
-                                            <?php else: ?>
-                                                <small class="text-muted">Never updated</small>
-                                            <?php endif; ?>
+                                                <?php else: ?>
+                                                    <span class="text-muted">Never updated</span>
+                                                <?php endif; ?>
+                                            </small>
                                         </td>
                                         <td>
                                             <a href="<?= base_url('admin/areas/edit/' . $area['id']) ?>" class="btn btn-outline-primary btn-sm">

@@ -33,6 +33,12 @@ class Admin extends Controller
         $admin = $model->where('email', $email)->first();
 
         if ($admin && password_verify($password, $admin['password'])) {
+            // Check if admin account is active
+            if ($admin['active'] != 1) {
+                session()->setFlashdata('error', 'Your account has been deactivated. Please contact administrator.');
+                return redirect()->back()->withInput();
+            }
+
             session()->set([
                 'admin_id' => $admin['id'],
                 'admin_username' => $admin['username'],
@@ -43,6 +49,12 @@ class Admin extends Controller
             // Log login activity
             $activityLogger = new ActivityLogger();
             $activityLogger->logLogin($admin['id'], 'Admin logged in');
+
+            // Check if password reset is forced
+            if ($admin['force_password_reset']) {
+                session()->setFlashdata('warning', 'Your password has expired. Please change your password to continue.');
+                return redirect()->to(base_url('admin/profile'));
+            }
 
             return redirect()->to(base_url('admin/dashboard'));
         } else {
@@ -55,6 +67,11 @@ class Admin extends Controller
     {
         if (!session()->get('admin_logged_in')) {
             return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check permission
+        if (!hasPermission('dashboard.view')) {
+            return redirect()->to(base_url('admin/login'))->with('error', 'Access denied');
         }
 
         $settingsModel = new SettingsModel();
@@ -73,6 +90,11 @@ class Admin extends Controller
     {
         if (!session()->get('admin_logged_in')) {
             return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check permission
+        if (!hasPermission('profile.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         $adminModel = new AdminModel();
@@ -225,9 +247,16 @@ class Admin extends Controller
             return redirect()->back()->withInput()->with('password_errors', ['current_password' => 'Current password is incorrect']);
         }
 
-        // Update password
+        // Update password and reset force_password_reset flag
         $newPassword = password_hash($this->request->getPost('new_password'), PASSWORD_DEFAULT);
-        if ($adminModel->update($adminId, ['password' => $newPassword])) {
+        $updateData = ['password' => $newPassword];
+
+        // Reset force password reset flag if it was set
+        if ($admin['force_password_reset']) {
+            $updateData['force_password_reset'] = 0;
+        }
+
+        if ($adminModel->update($adminId, $updateData)) {
             return redirect()->back()->with('password_success', 'Password changed successfully');
         } else {
             return redirect()->back()->withInput()->with('password_errors', ['general' => 'Failed to change password']);
@@ -240,13 +269,12 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
-        // Check if user has admin or super_admin role
-        $adminModel = new AdminModel();
-        $currentAdmin = $adminModel->find(session()->get('admin_id'));
-        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
-            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        // Check permission
+        if (!hasPermission('admin_users.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
+        $adminModel = new AdminModel();
         $admins = $adminModel->findAll();
 
         return view('admin/admin_users/index', ['admins' => $admins]);
@@ -258,11 +286,9 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
-        // Check if user has admin or super_admin role
-        $adminModel = new AdminModel();
-        $currentAdmin = $adminModel->find(session()->get('admin_id'));
-        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
-            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        // Check permission
+        if (!hasPermission('admin_users.create')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         return view('admin/admin_users/create');
@@ -274,11 +300,9 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
-        // Check if user has admin or super_admin role
-        $adminModel = new AdminModel();
-        $currentAdmin = $adminModel->find(session()->get('admin_id'));
-        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
-            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        // Check permission
+        if (!hasPermission('admin_users.create')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         $validation = \Config\Services::validation();
@@ -310,6 +334,16 @@ class Admin extends Controller
                     'valid_email' => 'Please enter a valid email address',
                     'max_length' => 'Email cannot exceed 100 characters',
                     'is_unique' => 'This email is already registered'
+                ]
+            ],
+            'mobile' => [
+                'label' => 'Mobile Number',
+                'rules' => 'required|max_length[20]|is_unique[admins.mobile]|regex_match[/^[6-9]\d{9}$/]',
+                'errors' => [
+                    'required' => 'Mobile number is required',
+                    'max_length' => 'Mobile number cannot exceed 20 characters',
+                    'is_unique' => 'This mobile number is already registered',
+                    'regex_match' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9'
                 ]
             ],
             'password' => [
@@ -356,8 +390,12 @@ class Admin extends Controller
             'username' => $this->request->getPost('username'),
             'name' => $this->request->getPost('name'),
             'email' => $this->request->getPost('email'),
+            'mobile' => $this->request->getPost('mobile'),
             'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'role' => $this->request->getPost('role')
+            'role' => $this->request->getPost('role'),
+            'active' => (int)$this->request->getPost('active'),
+            'force_password_reset' => 0,
+            'sms_2fa_enabled' => 0
         ];
 
         // Handle profile picture upload
@@ -386,13 +424,12 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
-        // Check if user has admin or super_admin role
-        $adminModel = new AdminModel();
-        $currentAdmin = $adminModel->find(session()->get('admin_id'));
-        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
-            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        // Check permission
+        if (!hasPermission('admin_users.edit')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
+        $adminModel = new AdminModel();
         $admin = $adminModel->find($id);
 
         if (!$admin) {
@@ -402,17 +439,131 @@ class Admin extends Controller
         return view('admin/admin_users/edit', ['admin' => $admin]);
     }
 
+    public function toggleAdminStatus($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check permission
+        if (!hasPermission('admin_users.edit')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Access denied'
+            ]);
+        }
+
+        $admin = $adminModel->find($id);
+        if (!$admin) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Admin user not found'
+            ]);
+        }
+
+        // Prevent deactivating own account
+        if ($id == session()->get('admin_id')) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'You cannot deactivate your own account'
+            ]);
+        }
+
+        $newStatus = ($admin['active'] ?? 1) == 1 ? 0 : 1;
+        $statusText = $newStatus == 1 ? 'activated' : 'deactivated';
+
+        if ($adminModel->update($id, ['active' => $newStatus])) {
+            // Log status change activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('admins', $id, 'Admin account ' . $statusText . ' by super admin: ' . $currentAdmin['username']);
+
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Admin account ' . $statusText . ' successfully',
+                'new_status' => $newStatus
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to update admin status'
+        ]);
+    }
+
+    public function updateAdminPassword($id)
+    {
+        if (!session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check permission
+        if (!hasPermission('admin_users.edit')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
+        $admin = $adminModel->find($id);
+        if (!$admin) {
+            return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
+        }
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'new_password' => [
+                'label' => 'New Password',
+                'rules' => 'required|min_length[8]|regex_match[/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/]',
+                'errors' => [
+                    'required' => 'New password is required',
+                    'min_length' => 'Password must be at least 8 characters long',
+                    'regex_match' => 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+                ]
+            ],
+            'confirm_password' => [
+                'label' => 'Confirm Password',
+                'rules' => 'required|matches[new_password]',
+                'errors' => [
+                    'required' => 'Please confirm the password',
+                    'matches' => 'Passwords do not match'
+                ]
+            ],
+            'force_password_reset' => [
+                'label' => 'Force Password Reset',
+                'rules' => 'required|in_list[0,1]',
+                'errors' => [
+                    'required' => 'Force password reset setting is required',
+                    'in_list' => 'Force password reset must be either yes or no'
+                ]
+            ]
+        ]);
+
+        if (!$validation->withRequest($this->request)->run()) {
+            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+        }
+
+        $data = [
+            'password' => password_hash($this->request->getPost('new_password'), PASSWORD_DEFAULT),
+            'force_password_reset' => (int)$this->request->getPost('force_password_reset')
+        ];
+
+        if ($adminModel->update($id, $data)) {
+            // Log password change activity
+            $activityLogger = new ActivityLogger();
+            $activityLogger->logEdit('admins', $id, 'Password updated by super admin: ' . $currentAdmin['username']);
+
+            return redirect()->to(base_url('admin/admin-users'))->with('success', 'Admin password updated successfully');
+        } else {
+            return redirect()->back()->withInput()->with('error', 'Failed to update admin password');
+        }
+    }
+
     public function updateAdminUser($id)
     {
         if (!session()->get('admin_logged_in')) {
             return redirect()->to(base_url('admin/login'));
         }
 
-        // Check if user has admin or super_admin role
-        $adminModel = new AdminModel();
-        $currentAdmin = $adminModel->find(session()->get('admin_id'));
-        if (!in_array($currentAdmin['role'], ['super_admin', 'admin'])) {
-            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied. Admin privileges required.');
+        // Check permission
+        if (!hasPermission('admin_users.edit')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         $existingAdmin = $adminModel->find($id);
@@ -441,12 +592,54 @@ class Admin extends Controller
                     'is_unique' => 'This email is already registered'
                 ]
             ],
+            'mobile' => [
+                'label' => 'Mobile Number',
+                'rules' => 'required|max_length[20]|is_unique[admins.mobile,id,' . $id . ']|regex_match[/^[6-9]\d{9}$/]',
+                'errors' => [
+                    'required' => 'Mobile number is required',
+                    'max_length' => 'Mobile number cannot exceed 20 characters',
+                    'is_unique' => 'This mobile number is already registered',
+                    'regex_match' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9'
+                ]
+            ],
             'role' => [
                 'label' => 'Role',
                 'rules' => 'required|in_list[super_admin,admin,employee]',
                 'errors' => [
                     'required' => 'Role is required',
                     'in_list' => 'Role must be either Super Admin, Admin, or Employee'
+                ]
+            ],
+            'active' => [
+                'label' => 'Active Status',
+                'rules' => 'required|in_list[0,1]',
+                'errors' => [
+                    'required' => 'Active status is required',
+                    'in_list' => 'Active status must be either Active or Inactive'
+                ]
+            ],
+            'force_password_reset' => [
+                'label' => 'Force Password Reset',
+                'rules' => 'required|in_list[0,1]',
+                'errors' => [
+                    'required' => 'Force password reset is required',
+                    'in_list' => 'Force password reset must be either yes or no'
+                ]
+            ],
+            'sms_2fa_enabled' => [
+                'label' => 'SMS 2FA Enabled',
+                'rules' => 'required|in_list[0,1]',
+                'errors' => [
+                    'required' => 'SMS 2FA setting is required',
+                    'in_list' => 'SMS 2FA must be either enabled or disabled'
+                ]
+            ],
+            'active' => [
+                'label' => 'Active Status',
+                'rules' => 'required|in_list[0,1]',
+                'errors' => [
+                    'required' => 'Active status is required',
+                    'in_list' => 'Active status must be either Active or Inactive'
                 ]
             ],
             'profile_picture' => [
@@ -467,7 +660,11 @@ class Admin extends Controller
         $data = [
             'name' => $this->request->getPost('name'),
             'email' => $this->request->getPost('email'),
-            'role' => $this->request->getPost('role')
+            'mobile' => $this->request->getPost('mobile'),
+            'role' => $this->request->getPost('role'),
+            'active' => (int)$this->request->getPost('active'),
+            'force_password_reset' => (int)$this->request->getPost('force_password_reset'),
+            'sms_2fa_enabled' => (int)$this->request->getPost('sms_2fa_enabled')
         ];
 
         // Handle profile picture upload
@@ -507,6 +704,11 @@ class Admin extends Controller
     {
         if (!session()->get('admin_logged_in')) {
             return redirect()->to(base_url('admin/login'));
+        }
+
+        // Check permission
+        if (!hasPermission('settings.view')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         $settingsModel = new SettingsModel();
@@ -610,6 +812,11 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/login'));
         }
 
+        // Check permission
+        if (!hasPermission('masters.areas')) {
+            return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
+        }
+
         // Handle CSV export
         if ($this->request->getGet('export') === 'csv') {
             return $this->exportAreasCsv();
@@ -627,12 +834,11 @@ class Admin extends Controller
         // Build query with filters and society count
         $db = \Config\Database::connect();
         $query = $db->table('areas a')
-                    ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COUNT(s.id) as society_count')
+                    ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
                     ->join('admins ca', 'ca.id = a.created_by', 'left')
                     ->join('admins ua', 'ua.id = a.updated_by', 'left')
-                    ->join('societies s', 's.area_id = a.id AND s.deleted_at IS NULL', 'left')
-                    ->where('a.deleted_at', null)
-                    ->groupBy('a.id');
+                    ->join('(SELECT area_id, COUNT(*) as society_count FROM societies WHERE deleted_at IS NULL GROUP BY area_id) society_counts', 'society_counts.area_id = a.id', 'left')
+                    ->where('a.deleted_at IS NULL');
 
         // Apply filters
         if (!empty($filters['area_name'])) {
@@ -876,12 +1082,11 @@ class Admin extends Controller
             // Build query with filters and society count (same as areas method)
             $db = \Config\Database::connect();
             $query = $db->table('areas a')
-                        ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COUNT(s.id) as society_count')
+                        ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
                         ->join('admins ca', 'ca.id = a.created_by', 'left')
                         ->join('admins ua', 'ua.id = a.updated_by', 'left')
-                        ->join('societies s', 's.area_id = a.id AND s.deleted_at IS NULL', 'left')
-                        ->where('a.deleted_at', null)
-                        ->groupBy('a.id');
+                        ->join('(SELECT area_id, COUNT(*) as society_count FROM societies WHERE deleted_at IS NULL GROUP BY area_id) society_counts', 'society_counts.area_id = a.id', 'left')
+                        ->where('a.deleted_at IS NULL');
     
             // Apply filters
             if (!empty($filters['area_name'])) {

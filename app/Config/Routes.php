@@ -23,6 +23,13 @@ $routes->post('/admin/admin-users/update/(:num)', 'Admin::updateAdminUser/$1');
 $routes->get('/admin/settings', 'Admin::settings');
 $routes->post('/admin/settings/update', 'Admin::updateSettings');
 
+// Access Management routes (Super Admin Only)
+$routes->get('/admin/access-management', 'AccessManagement::index');
+$routes->post('/admin/access-management/update-role-permissions', 'AccessManagement::updateRolePermissions');
+$routes->post('/admin/access-management/update-user-permissions', 'AccessManagement::updateUserPermissions');
+$routes->get('/admin/access-management/get-role-permissions', 'AccessManagement::getRolePermissions');
+$routes->get('/admin/access-management/get-user-permissions', 'AccessManagement::getUserPermissions');
+
 // Users routes (admin)
 $routes->get('/admin/users', 'Users::index');
 $routes->get('/admin/users/create', 'Users::create');
