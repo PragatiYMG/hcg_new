@@ -53,7 +53,7 @@ class BurnerCounts extends Controller
 
         // Build query with admin name join
         $builder = $model->builder();
-        $builder->select('burner_counts.*, admins.name as created_by_name, burner_counts.created_date')
+        $builder->select('burner_counts.*, CONCAT(admins.first_name, " ", admins.last_name) as created_by_name, burner_counts.created_date')
                 ->join('admins', 'admins.id = burner_counts.created_by', 'left');
 
         // Apply search

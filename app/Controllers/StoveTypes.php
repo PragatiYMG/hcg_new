@@ -53,7 +53,7 @@ class StoveTypes extends Controller
 
         // Build query with admin name join
         $builder = $model->builder();
-        $builder->select('stove_types.*, admins.name as created_by_name, stove_types.created_date')
+        $builder->select('stove_types.*, CONCAT(admins.first_name, " ", admins.last_name) as created_by_name, stove_types.created_date')
                 ->join('admins', 'admins.id = stove_types.created_by', 'left');
 
         // Apply search

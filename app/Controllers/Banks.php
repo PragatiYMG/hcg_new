@@ -54,7 +54,7 @@ class Banks extends Controller
         // Build query with filters
         $db = \Config\Database::connect();
         $query = $db->table('banks b')
-                   ->select('b.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name')
+                   ->select('b.*, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name')
                    ->join('admins ca', 'ca.id = b.created_by', 'left')
                    ->join('admins ua', 'ua.id = b.updated_by', 'left')
                    ->where('b.deleted_at', null);
@@ -260,7 +260,7 @@ class Banks extends Controller
         // Build query with filters (same as index method)
         $db = \Config\Database::connect();
         $query = $db->table('banks b')
-                   ->select('b.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name')
+                   ->select('b.*, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name')
                    ->join('admins ca', 'ca.id = b.created_by', 'left')
                    ->join('admins ua', 'ua.id = b.updated_by', 'left')
                    ->where('b.deleted_at', null);

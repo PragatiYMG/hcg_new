@@ -498,6 +498,13 @@
                                 permission: 'admin_users.view'
                             },
                             {
+                                id: 'departments',
+                                title: 'Departments',
+                                icon: 'fas fa-building',
+                                url: '<?= base_url("admin/departments") ?>',
+                                permission: 'super_admin_only' // Only super admin can access
+                            },
+                            {
                                 id: 'access-management',
                                 title: 'Access Management',
                                 icon: 'fas fa-shield-alt',

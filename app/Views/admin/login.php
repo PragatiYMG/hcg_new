@@ -192,10 +192,10 @@
 
         <form action="<?= base_url('admin/authenticate') ?>" method="post">
             <div class="form-group">
-                <label for="email">Email Address</label>
+                <label for="email">Username or Email Address</label>
                 <div class="input-group">
-                    <span class="input-icon">📧</span>
-                    <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                    <span class="input-icon">👤</span>
+                    <input type="text" id="email" name="email" placeholder="Enter your username or email" required>
                 </div>
             </div>
 

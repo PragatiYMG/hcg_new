@@ -50,7 +50,7 @@
                                 <?= csrf_field() ?>
 
                                 <div class="row">
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="username">Username <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['username']) ? 'is-invalid' : '' ?>" id="username" name="username" value="<?= old('username', esc($admin['username'])) ?>" required>
@@ -62,13 +62,25 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-6">
+                                    <div class="col-md-4">
                                         <div class="form-group">
-                                            <label for="name">Full Name <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['name']) ? 'is-invalid' : '' ?>" id="name" name="name" value="<?= old('name', esc($admin['name'] ?? '')) ?>" required>
-                                            <?php if (isset(session()->getFlashdata('errors')['name'])): ?>
+                                            <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['first_name']) ? 'is-invalid' : '' ?>" id="first_name" name="first_name" value="<?= old('first_name', esc($admin['first_name'] ?? '')) ?>" required>
+                                            <?php if (isset(session()->getFlashdata('errors')['first_name'])): ?>
                                                 <div class="invalid-feedback">
-                                                    <?= session()->getFlashdata('errors')['name'] ?>
+                                                    <?= session()->getFlashdata('errors')['first_name'] ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['last_name']) ? 'is-invalid' : '' ?>" id="last_name" name="last_name" value="<?= old('last_name', esc($admin['last_name'] ?? '')) ?>" required>
+                                            <?php if (isset(session()->getFlashdata('errors')['last_name'])): ?>
+                                                <div class="invalid-feedback">
+                                                    <?= session()->getFlashdata('errors')['last_name'] ?>
                                                 </div>
                                             <?php endif; ?>
                                         </div>

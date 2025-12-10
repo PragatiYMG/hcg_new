@@ -50,7 +50,7 @@ class Societies extends Controller
         // Build query with filters
         $db = \Config\Database::connect();
         $query = $db->table('societies s')
-                   ->select('s.*, a.area_name, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name')
+                   ->select('s.*, a.area_name, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name')
                    ->join('areas a', 'a.id = s.area_id', 'left')
                    ->join('admins ca', 'ca.id = s.created_by', 'left')
                    ->join('admins ua', 'ua.id = s.updated_by', 'left')
@@ -249,7 +249,7 @@ class Societies extends Controller
         // Build query with filters (same as index method)
         $db = \Config\Database::connect();
         $query = $db->table('societies s')
-                   ->select('s.*, a.area_name, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name')
+                   ->select('s.*, a.area_name, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name')
                    ->join('areas a', 'a.id = s.area_id', 'left')
                    ->join('admins ca', 'ca.id = s.created_by', 'left')
                    ->join('admins ua', 'ua.id = s.updated_by', 'left')

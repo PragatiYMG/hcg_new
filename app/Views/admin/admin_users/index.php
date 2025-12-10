@@ -32,8 +32,94 @@
                         </div>
                     <?php endif; ?>
 
+                    <!-- Filter Form -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <button class="btn btn-link p-0" type="button" data-toggle="collapse" data-target="#filterCollapse" aria-expanded="false">
+                                    <i class="fas fa-filter"></i> Filters
+                                </button>
+                            </h5>
+                        </div>
+                        <div class="collapse" id="filterCollapse">
+                            <div class="card-body">
+                                <form id="filterForm" class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_username">Username</label>
+                                            <input type="text" class="form-control" id="filter_username" name="username" placeholder="Search username">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_first_name">First Name</label>
+                                            <input type="text" class="form-control" id="filter_first_name" name="first_name" placeholder="Search first name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_last_name">Last Name</label>
+                                            <input type="text" class="form-control" id="filter_last_name" name="last_name" placeholder="Search last name">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_department_id">Department</label>
+                                            <select class="form-control" id="filter_department_id" name="department_id">
+                                                <option value="">All Departments</option>
+                                                <?php if (!empty($departments)): foreach ($departments as $dept): ?>
+                                                    <option value="<?= esc($dept['id']) ?>"><?= esc($dept['department_name']) ?></option>
+                                                <?php endforeach; endif; ?>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_mobile">Mobile</label>
+                                            <input type="text" class="form-control" id="filter_mobile" name="mobile" placeholder="Search mobile">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_email">Email</label>
+                                            <input type="email" class="form-control" id="filter_email" name="email" placeholder="Search email">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_active">Status</label>
+                                            <select class="form-control" id="filter_active" name="active">
+                                                <option value="">All Status</option>
+                                                <option value="1">Active</option>
+                                                <option value="0">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label for="filter_sms_2fa_enabled">SMS 2FA</label>
+                                            <select class="form-control" id="filter_sms_2fa_enabled" name="sms_2fa_enabled">
+                                                <option value="">All</option>
+                                                <option value="1">Enabled</option>
+                                                <option value="0">Disabled</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <button type="button" class="btn btn-primary" onclick="applyFilters()">
+                                            <i class="fas fa-search"></i> Apply Filters
+                                        </button>
+                                        <button type="button" class="btn btn-secondary ml-2" onclick="clearFilters()">
+                                            <i class="fas fa-times"></i> Clear Filters
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
-                        <table class="table table-striped table-bordered datatable">
+                        <table class="table table-striped table-bordered">
                             <thead class="thead-dark">
                                 <tr>
                                     <th>ID</th>
@@ -42,6 +128,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Mobile</th>
+                                    <th>Department</th>
                                     <th>Role</th>
                                     <th>Status</th>
                                     <th>SMS 2FA</th>
@@ -49,66 +136,8 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php foreach ($admins as $admin): ?>
-                                    <tr>
-                                        <td><?= $admin['id'] ?></td>
-                                        <td class="text-center">
-                                            <?php if ($admin['profile_picture']): ?>
-                                                <img src="<?= base_url('uploads/Admin_Profile/' . $admin['profile_picture']) ?>"
-                                                     alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
-                                            <?php else: ?>
-                                                <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center"
-                                                     style="width: 40px; height: 40px;">
-                                                    <i class="fas fa-user text-white"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= esc($admin['username']) ?></td>
-                                        <td><?= esc($admin['name'] ?? 'N/A') ?></td>
-                                        <td><?= esc($admin['email']) ?></td>
-                                        <td><?= esc($admin['mobile'] ?? 'N/A') ?></td>
-                                        <td>
-                                            <span class="badge badge-<?= $admin['role'] === 'super_admin' ? 'danger' : ($admin['role'] === 'admin' ? 'primary' : 'info') ?>">
-                                                <?= ucfirst(str_replace('_', ' ', $admin['role'])) ?>
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <?php if (($admin['active'] ?? 1) == 1): ?>
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-check-circle"></i> Active
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="badge badge-danger">
-                                                    <i class="fas fa-times-circle"></i> Inactive
-                                                </span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="text-center">
-                                            <?php if (($admin['sms_2fa_enabled'] ?? 0) == 1): ?>
-                                                <span class="badge badge-success">
-                                                    <i class="fas fa-check"></i> Enabled
-                                                </span>
-                                            <?php else: ?>
-                                                <span class="badge badge-secondary">
-                                                    <i class="fas fa-times"></i> Disabled
-                                                </span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?= $admin['created_at'] ? date('d M Y H:i', strtotime($admin['created_at'])) : 'N/A' ?></td>
-                                        <td>
-                                            <a href="<?= base_url('admin/admin-users/edit/' . $admin['id']) ?>"
-                                               class="btn btn-sm btn-warning">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <?php if (session()->get('admin_role') === 'super_admin' && $admin['id'] !== session()->get('admin_id')): ?>
-                                                <button class="btn btn-sm btn-danger ml-1" onclick="changePassword(<?= $admin['id'] ?>, '<?= esc($admin['username']) ?>')">
-                                                    <i class="fas fa-key"></i> Password
-                                                </button>
-                                            <?php endif; ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                            <tbody id="adminTableBody">
+                                <!-- Data will be loaded via AJAX -->
                             </tbody>
                         </table>
                     </div>
@@ -160,21 +189,144 @@
 </div>
 
 <script>
+let currentFilters = {};
+
+function loadAdminUsers() {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '<tr><td colspan="12" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+
+    const formData = new FormData(document.getElementById('filterForm'));
+    const params = new URLSearchParams();
+
+    for (let [key, value] of formData.entries()) {
+        if (value.trim() !== '') {
+            params.append(key, value);
+        }
+    }
+
+    fetch('<?= base_url('admin/admin-users/get-table-data') ?>?' + params.toString(), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            renderAdminTable(data.data);
+        } else {
+            console.error('Error loading data:', data);
+            tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error loading data. Please try again.</td></tr>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center text-danger">Error loading data. Please check your connection and try again.</td></tr>';
+    });
+}
+
+function renderAdminTable(admins) {
+    const tbody = document.getElementById('adminTableBody');
+    tbody.innerHTML = '';
+
+    if (admins.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" class="text-center">No admin users found</td></tr>';
+        return;
+    }
+
+    admins.forEach(admin => {
+        const fullName = ((admin.first_name || '') + ' ' + (admin.last_name || '')).trim() || 'N/A';
+        const profileImage = admin.profile_picture
+            ? `<img src="<?= base_url('uploads/Admin_Profile/') ?>${admin.profile_picture}" alt="Profile" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">`
+            : `<div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fas fa-user text-white"></i></div>`;
+
+        const roleBadge = admin.role === 'super_admin'
+            ? '<span class="badge badge-danger">Super Admin</span>'
+            : admin.role === 'admin'
+                ? '<span class="badge badge-primary">Admin</span>'
+                : '<span class="badge badge-info">Employee</span>';
+
+        const statusBadge = (admin.active == 1)
+            ? '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Active</span>'
+            : '<span class="badge badge-danger"><i class="fas fa-times-circle"></i> Inactive</span>';
+
+        const sms2faBadge = (admin.sms_2fa_enabled == 1)
+            ? '<span class="badge badge-success"><i class="fas fa-check"></i> Enabled</span>'
+            : '<span class="badge badge-secondary"><i class="fas fa-times"></i> Disabled</span>';
+
+        const createdDate = admin.created_at ? new Date(admin.created_at).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        }) : 'N/A';
+
+        let actions = `<a href="<?= base_url('admin/admin-users/edit/') ?>${admin.id}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>`;
+
+        <?php if (session()->get('admin_role') === 'super_admin'): ?>
+        if (admin.id != <?= session()->get('admin_id') ?>) {
+            actions += `<button class="btn btn-sm btn-danger ml-1" onclick="changePassword(${admin.id}, '${admin.username}')" title="Change Password"><i class="fas fa-key"></i></button>`;
+        }
+        <?php endif; ?>
+
+        const departmentName = admin.department_name || 'N/A';
+
+        const row = `<tr>
+            <td>${admin.id}</td>
+            <td class="text-center">${profileImage}</td>
+            <td>${admin.username}</td>
+            <td>${fullName}</td>
+            <td>${admin.email}</td>
+            <td>${admin.mobile || 'N/A'}</td>
+            <td>${departmentName}</td>
+            <td>${roleBadge}</td>
+            <td class="text-center">${statusBadge}</td>
+            <td class="text-center">${sms2faBadge}</td>
+            <td>${createdDate}</td>
+            <td>${actions}</td>
+        </tr>`;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
+}
+
+function applyFilters() {
+    loadAdminUsers();
+}
+
+function clearFilters() {
+    document.getElementById('filterForm').reset();
+    loadAdminUsers();
+}
+
 function changePassword(userId, userName) {
     document.getElementById('userName').textContent = userName;
     document.getElementById('changePasswordForm').action = '<?= base_url('admin/admin-users/update-password/') ?>' + userId;
-    $('#changePasswordModal').modal('show');
+
+    // Use Bootstrap modal without jQuery
+    const modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+    modal.show();
 }
 
-// Auto-hide success notifications
-$(document).ready(function() {
-    $('.alert-success.auto-hide').each(function() {
-        var $alert = $(this);
+// Load initial data and setup auto-hide notifications
+document.addEventListener('DOMContentLoaded', function() {
+    loadAdminUsers();
+
+    // Auto-hide success notifications
+    const alerts = document.querySelectorAll('.alert-success.auto-hide');
+    alerts.forEach(function(alert) {
         setTimeout(function() {
-            $alert.fadeOut('slow', function() {
-                $alert.remove();
-            });
-        }, 5000); // Hide after 5 seconds
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.style.display = 'none';
+            }, 500);
+        }, 5000);
     });
 });
 </script>

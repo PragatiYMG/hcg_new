@@ -16,6 +16,7 @@ $routes->get('/admin/profile', 'Admin::profile');
 $routes->post('/admin/profile/update', 'Admin::updateProfile');
 $routes->post('/admin/profile/change-password', 'Admin::changePassword');
 $routes->get('/admin/admin-users', 'Admin::adminUsers');
+$routes->get('/admin/admin-users/get-table-data', 'Admin::getAdminUsersData');
 $routes->get('/admin/admin-users/create', 'Admin::createAdminUser');
 $routes->post('/admin/admin-users/store', 'Admin::storeAdminUser');
 $routes->get('/admin/admin-users/edit/(:num)', 'Admin::editAdminUser/$1');
@@ -102,6 +103,13 @@ $routes->get('/admin/cities/edit/(:num)', 'Cities::edit/$1');
 $routes->post('/admin/cities/update/(:num)', 'Cities::update/$1');
 $routes->get('/admin/cities/delete/(:num)', 'Cities::delete/$1');
 $routes->get('/admin/cities/getByState/(:num)', 'Cities::getByState/$1');
+
+// Departments routes (AJAX-based management)
+$routes->get('/admin/departments', 'Departments::index');
+$routes->get('/admin/departments/getTableData', 'Departments::getTableData');
+$routes->get('/admin/departments/getDepartment/(:num)', 'Departments::getDepartment/$1');
+$routes->post('/admin/departments/store', 'Departments::store');
+$routes->post('/admin/departments/update/(:num)', 'Departments::update/$1');
 
 // Banks routes (DataTable with AJAX CRUD)
 $routes->get('/admin/banks', 'Banks::index');

@@ -49,7 +49,7 @@ class Images extends Controller
         // Build query with filters
         $db = \Config\Database::connect();
         $query = $db->table('images i')
-                   ->select('i.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name')
+                   ->select('i.*, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name')
                    ->join('admins ca', 'ca.id = i.created_by', 'left')
                    ->join('admins ua', 'ua.id = i.updated_by', 'left')
                    ->where('i.deleted_at', null);

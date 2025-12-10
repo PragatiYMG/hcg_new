@@ -8,7 +8,7 @@ class AdminModel extends Model
 {
     protected $table = 'admins';
     protected $primaryKey = 'id';
-    protected $allowedFields = ['username', 'name', 'password', 'email', 'mobile', 'profile_picture', 'role', 'force_password_reset', 'sms_2fa_enabled', 'active', 'created_at', 'updated_at'];
+    protected $allowedFields = ['username', 'first_name', 'last_name', 'password', 'email', 'mobile', 'profile_picture', 'role', 'department_id', 'force_password_reset', 'sms_2fa_enabled', 'active', 'created_at', 'updated_at'];
     protected $useTimestamps = true;
     protected $createdField = 'created_at';
     protected $updatedField = 'updated_at';

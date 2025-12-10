@@ -27,10 +27,16 @@ class Admin extends Controller
     {
         $model = new AdminModel();
 
-        $email = $this->request->getPost('email');
+        $identifier = $this->request->getPost('email'); // Can be email or username
         $password = $this->request->getPost('password');
 
-        $admin = $model->where('email', $email)->first();
+        // Try to find by email first
+        $admin = $model->where('email', $identifier)->first();
+
+        // If not found by email, try by username
+        if (!$admin) {
+            $admin = $model->where('username', $identifier)->first();
+        }
 
         if ($admin && password_verify($password, $admin['password'])) {
             // Check if admin account is active
@@ -58,7 +64,7 @@ class Admin extends Controller
 
             return redirect()->to(base_url('admin/dashboard'));
         } else {
-            session()->setFlashdata('error', 'Invalid username or password');
+            session()->setFlashdata('error', 'Invalid username/email or password');
             return redirect()->back()->withInput();
         }
     }
@@ -124,13 +130,22 @@ class Admin extends Controller
                     'is_unique' => 'This username is already taken'
                 ]
             ],
-            'name' => [
-                'label' => 'Name',
-                'rules' => 'required|min_length[2]|max_length[255]',
+            'first_name' => [
+                'label' => 'First Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
                 'errors' => [
-                    'required' => 'Name is required',
-                    'min_length' => 'Name must be at least 2 characters',
-                    'max_length' => 'Name cannot exceed 255 characters'
+                    'required' => 'First name is required',
+                    'min_length' => 'First name must be at least 2 characters',
+                    'max_length' => 'First name cannot exceed 100 characters'
+                ]
+            ],
+            'last_name' => [
+                'label' => 'Last Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
+                'errors' => [
+                    'required' => 'Last name is required',
+                    'min_length' => 'Last name must be at least 2 characters',
+                    'max_length' => 'Last name cannot exceed 100 characters'
                 ]
             ],
             'email' => [
@@ -160,7 +175,8 @@ class Admin extends Controller
 
         $data = [
             'username' => $this->request->getPost('username'),
-            'name' => $this->request->getPost('name'),
+            'first_name' => $this->request->getPost('first_name'),
+            'last_name' => $this->request->getPost('last_name'),
             'email' => $this->request->getPost('email')
         ];
 
@@ -190,7 +206,7 @@ class Admin extends Controller
             // Update session data
             session()->set([
                 'admin_username' => $data['username'],
-                'admin_name' => $data['name'],
+                'admin_name' => $data['first_name'] . ' ' . $data['last_name'],
                 'admin_email' => $data['email']
             ]);
 
@@ -274,10 +290,84 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
-        $adminModel = new AdminModel();
-        $admins = $adminModel->findAll();
+        $departments = (new \App\Models\DepartmentModel())->where('status', 'active')->orderBy('department_name', 'ASC')->findAll();
 
-        return view('admin/admin_users/index', ['admins' => $admins]);
+        return view('admin/admin_users/index', ['departments' => $departments]);
+    }
+
+    public function getAdminUsersData()
+    {
+        try {
+            if (!session()->get('admin_logged_in')) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+            }
+
+            // Check permission
+            if (!hasPermission('admin_users.view')) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Access denied'], 403);
+            }
+
+            $adminModel = new AdminModel();
+
+            // Get filter parameters
+            $filters = [
+                'username' => $this->request->getGet('username'),
+                'first_name' => $this->request->getGet('first_name'),
+                'last_name' => $this->request->getGet('last_name'),
+                'department_id' => $this->request->getGet('department_id'),
+                'mobile' => $this->request->getGet('mobile'),
+                'email' => $this->request->getGet('email'),
+                'active' => $this->request->getGet('active'),
+                'sms_2fa_enabled' => $this->request->getGet('sms_2fa_enabled'),
+            ];
+
+            // Build query with filters and department join (exclude password for security)
+            $db = \Config\Database::connect();
+            $query = $db->table('admins a')
+                        ->select('a.id, a.username, a.email, a.first_name, a.last_name, a.department_id, a.mobile, a.role, a.force_password_reset, a.sms_2fa_enabled, a.active, a.profile_picture, a.created_at, a.updated_at, d.department_name')
+                        ->join('departments d', 'd.id = a.department_id', 'left');
+
+            // Apply filters
+            if (!empty($filters['username'])) {
+                $query->like('a.username', $filters['username']);
+            }
+            if (!empty($filters['first_name'])) {
+                $query->like('a.first_name', $filters['first_name']);
+            }
+            if (!empty($filters['last_name'])) {
+                $query->like('a.last_name', $filters['last_name']);
+            }
+            if (!empty($filters['department_id'])) {
+                $query->where('a.department_id', $filters['department_id']);
+            }
+            if (!empty($filters['mobile'])) {
+                $query->like('a.mobile', $filters['mobile']);
+            }
+            if (!empty($filters['email'])) {
+                $query->like('a.email', $filters['email']);
+            }
+            if ($filters['active'] !== null && $filters['active'] !== '') {
+                $query->where('a.active', $filters['active']);
+            }
+            if ($filters['sms_2fa_enabled'] !== null && $filters['sms_2fa_enabled'] !== '') {
+                $query->where('a.sms_2fa_enabled', $filters['sms_2fa_enabled']);
+            }
+
+            $admins = $query->orderBy('a.id', 'DESC')->get()->getResultArray();
+
+            return $this->response->setJSON([
+                'success' => true,
+                'data' => $admins
+            ]);
+
+        } catch (\Exception $e) {
+            log_message('error', 'Admin users AJAX error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Server error occurred',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function createAdminUser()
@@ -291,7 +381,9 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
-        return view('admin/admin_users/create');
+        $departments = (new \App\Models\DepartmentModel())->where('status', 'active')->orderBy('department_name', 'ASC')->findAll();
+
+        return view('admin/admin_users/create', ['departments' => $departments]);
     }
 
     public function storeAdminUser()
@@ -317,13 +409,22 @@ class Admin extends Controller
                     'is_unique' => 'This username is already taken'
                 ]
             ],
-            'name' => [
-                'label' => 'Name',
-                'rules' => 'required|min_length[2]|max_length[255]',
+            'first_name' => [
+                'label' => 'First Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
                 'errors' => [
-                    'required' => 'Name is required',
-                    'min_length' => 'Name must be at least 2 characters',
-                    'max_length' => 'Name cannot exceed 255 characters'
+                    'required' => 'First name is required',
+                    'min_length' => 'First name must be at least 2 characters',
+                    'max_length' => 'First name cannot exceed 100 characters'
+                ]
+            ],
+            'last_name' => [
+                'label' => 'Last Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
+                'errors' => [
+                    'required' => 'Last name is required',
+                    'min_length' => 'Last name must be at least 2 characters',
+                    'max_length' => 'Last name cannot exceed 100 characters'
                 ]
             ],
             'email' => [
@@ -388,11 +489,13 @@ class Admin extends Controller
 
         $data = [
             'username' => $this->request->getPost('username'),
-            'name' => $this->request->getPost('name'),
+            'first_name' => $this->request->getPost('first_name'),
+            'last_name' => $this->request->getPost('last_name'),
             'email' => $this->request->getPost('email'),
             'mobile' => $this->request->getPost('mobile'),
             'password' => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
             'role' => $this->request->getPost('role'),
+            'department_id' => $this->request->getPost('department_id') ? (int)$this->request->getPost('department_id') : null,
             'active' => (int)$this->request->getPost('active'),
             'force_password_reset' => 0,
             'sms_2fa_enabled' => 0
@@ -436,7 +539,9 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
         }
 
-        return view('admin/admin_users/edit', ['admin' => $admin]);
+        $departments = (new \App\Models\DepartmentModel())->where('status', 'active')->orderBy('department_name', 'ASC')->findAll();
+
+        return view('admin/admin_users/edit', ['admin' => $admin, 'departments' => $departments]);
     }
 
     public function toggleAdminStatus($id)
@@ -453,6 +558,7 @@ class Admin extends Controller
             ]);
         }
 
+        $adminModel = new AdminModel();
         $admin = $adminModel->find($id);
         if (!$admin) {
             return $this->response->setJSON([
@@ -475,6 +581,7 @@ class Admin extends Controller
         if ($adminModel->update($id, ['active' => $newStatus])) {
             // Log status change activity
             $activityLogger = new ActivityLogger();
+            $currentAdmin = $adminModel->find(session()->get('admin_id'));
             $activityLogger->logEdit('admins', $id, 'Admin account ' . $statusText . ' by super admin: ' . $currentAdmin['username']);
 
             return $this->response->setJSON([
@@ -501,6 +608,7 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
+        $adminModel = new AdminModel();
         $admin = $adminModel->find($id);
         if (!$admin) {
             return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
@@ -547,6 +655,7 @@ class Admin extends Controller
         if ($adminModel->update($id, $data)) {
             // Log password change activity
             $activityLogger = new ActivityLogger();
+            $currentAdmin = $adminModel->find(session()->get('admin_id'));
             $activityLogger->logEdit('admins', $id, 'Password updated by super admin: ' . $currentAdmin['username']);
 
             return redirect()->to(base_url('admin/admin-users'))->with('success', 'Admin password updated successfully');
@@ -566,6 +675,7 @@ class Admin extends Controller
             return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
+        $adminModel = new AdminModel();
         $existingAdmin = $adminModel->find($id);
         if (!$existingAdmin) {
             return redirect()->to(base_url('admin/admin-users'))->with('error', 'Admin user not found');
@@ -573,13 +683,22 @@ class Admin extends Controller
 
         $validation = \Config\Services::validation();
         $validation->setRules([
-            'name' => [
-                'label' => 'Name',
-                'rules' => 'required|min_length[2]|max_length[255]',
+            'first_name' => [
+                'label' => 'First Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
                 'errors' => [
-                    'required' => 'Name is required',
-                    'min_length' => 'Name must be at least 2 characters',
-                    'max_length' => 'Name cannot exceed 255 characters'
+                    'required' => 'First name is required',
+                    'min_length' => 'First name must be at least 2 characters',
+                    'max_length' => 'First name cannot exceed 100 characters'
+                ]
+            ],
+            'last_name' => [
+                'label' => 'Last Name',
+                'rules' => 'required|min_length[2]|max_length[100]',
+                'errors' => [
+                    'required' => 'Last name is required',
+                    'min_length' => 'Last name must be at least 2 characters',
+                    'max_length' => 'Last name cannot exceed 100 characters'
                 ]
             ],
             'email' => [
@@ -658,10 +777,12 @@ class Admin extends Controller
         }
 
         $data = [
-            'name' => $this->request->getPost('name'),
+            'first_name' => $this->request->getPost('first_name'),
+            'last_name' => $this->request->getPost('last_name'),
             'email' => $this->request->getPost('email'),
             'mobile' => $this->request->getPost('mobile'),
             'role' => $this->request->getPost('role'),
+            'department_id' => $this->request->getPost('department_id') ? (int)$this->request->getPost('department_id') : null,
             'active' => (int)$this->request->getPost('active'),
             'force_password_reset' => (int)$this->request->getPost('force_password_reset'),
             'sms_2fa_enabled' => (int)$this->request->getPost('sms_2fa_enabled')
@@ -689,7 +810,7 @@ class Admin extends Controller
             // If updating own profile, update session data
             if ($id == session()->get('admin_id')) {
                 session()->set([
-                    'admin_name' => $data['name'],
+                    'admin_name' => $data['first_name'] . ' ' . $data['last_name'],
                     'admin_role' => $data['role']
                 ]);
             }
@@ -834,7 +955,7 @@ class Admin extends Controller
         // Build query with filters and society count
         $db = \Config\Database::connect();
         $query = $db->table('areas a')
-                    ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
+                    ->select('a.*, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
                     ->join('admins ca', 'ca.id = a.created_by', 'left')
                     ->join('admins ua', 'ua.id = a.updated_by', 'left')
                     ->join('(SELECT area_id, COUNT(*) as society_count FROM societies WHERE deleted_at IS NULL GROUP BY area_id) society_counts', 'society_counts.area_id = a.id', 'left')
@@ -1082,7 +1203,7 @@ class Admin extends Controller
             // Build query with filters and society count (same as areas method)
             $db = \Config\Database::connect();
             $query = $db->table('areas a')
-                        ->select('a.*, COALESCE(ca.name, ca.username) as created_by_name, COALESCE(ua.name, ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
+                        ->select('a.*, COALESCE(CONCAT(ca.first_name, " ", ca.last_name), ca.username) as created_by_name, COALESCE(CONCAT(ua.first_name, " ", ua.last_name), ua.username) as updated_by_name, COALESCE(society_counts.society_count, 0) as society_count')
                         ->join('admins ca', 'ca.id = a.created_by', 'left')
                         ->join('admins ua', 'ua.id = a.updated_by', 'left')
                         ->join('(SELECT area_id, COUNT(*) as society_count FROM societies WHERE deleted_at IS NULL GROUP BY area_id) society_counts', 'society_counts.area_id = a.id', 'left')

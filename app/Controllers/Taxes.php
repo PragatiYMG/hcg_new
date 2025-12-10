@@ -42,8 +42,8 @@ class Taxes extends Controller
         // Add admin names for display
         $db = \Config\Database::connect();
         foreach ($taxes as &$tax) {
-            $admin = $db->table('admins')->select('name, username')->where('id', $tax['created_by'])->get()->getRowArray();
-            $tax['created_by_name'] = $admin ? ($admin['name'] ?? $admin['username']) : 'Unknown';
+            $admin = $db->table('admins')->select('first_name, last_name, username')->where('id', $tax['created_by'])->get()->getRowArray();
+            $tax['created_by_name'] = $admin ? (trim(($admin['first_name'] ?? '') . ' ' . ($admin['last_name'] ?? '')) ?: $admin['username']) : 'Unknown';
 
             if (!empty($tax['updated_at'])) {
                 $updatedAdmin = $db->table('admins')->select('name, username')->where('id', $tax['updated_by'] ?? null)->get()->getRowArray();

@@ -33,7 +33,7 @@
                         <?= csrf_field() ?>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="username">Username</label>
                                     <input type="text" class="form-control" id="username" name="username" value="<?= esc($admin['username']) ?>" readonly>
@@ -41,13 +41,25 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="name">Full Name <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['name']) ? 'is-invalid' : '' ?>" id="name" name="name" value="<?= old('name', esc($admin['name'] ?? '')) ?>" required>
-                                    <?php if (isset(session()->getFlashdata('errors')['name'])): ?>
+                                    <label for="first_name">First Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['first_name']) ? 'is-invalid' : '' ?>" id="first_name" name="first_name" value="<?= old('first_name', esc($admin['first_name'] ?? '')) ?>" required>
+                                    <?php if (isset(session()->getFlashdata('errors')['first_name'])): ?>
                                         <div class="invalid-feedback">
-                                            <?= session()->getFlashdata('errors')['name'] ?>
+                                            <?= session()->getFlashdata('errors')['first_name'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="last_name">Last Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control <?= isset(session()->getFlashdata('errors')['last_name']) ? 'is-invalid' : '' ?>" id="last_name" name="last_name" value="<?= old('last_name', esc($admin['last_name'] ?? '')) ?>" required>
+                                    <?php if (isset(session()->getFlashdata('errors')['last_name'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['last_name'] ?>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -82,7 +94,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="role">Role <span class="text-danger">*</span></label>
                                     <select class="form-control <?= isset(session()->getFlashdata('errors')['role']) ? 'is-invalid' : '' ?>" id="role" name="role" required>
@@ -99,7 +111,24 @@
                                 </div>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="department_id">Department</label>
+                                    <select class="form-control <?= isset(session()->getFlashdata('errors')['department_id']) ? 'is-invalid' : '' ?>" id="department_id" name="department_id">
+                                        <option value="">Select Department</option>
+                                        <?php if (!empty($departments)): foreach ($departments as $dept): ?>
+                                            <option value="<?= esc($dept['id']) ?>" <?= old('department_id', $admin['department_id'] ?? '') == $dept['id'] ? 'selected' : '' ?>><?= esc($dept['department_name']) ?></option>
+                                        <?php endforeach; endif; ?>
+                                    </select>
+                                    <?php if (isset(session()->getFlashdata('errors')['department_id'])): ?>
+                                        <div class="invalid-feedback">
+                                            <?= session()->getFlashdata('errors')['department_id'] ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label for="sms_2fa_enabled">SMS 2FA <span class="text-danger">*</span></label>
                                     <select class="form-control <?= isset(session()->getFlashdata('errors')['sms_2fa_enabled']) ? 'is-invalid' : '' ?>" id="sms_2fa_enabled" name="sms_2fa_enabled" required>

@@ -24,7 +24,7 @@
                                 <?php foreach ($users as $user): ?>
                                     <a href="#" class="list-group-item list-group-item-action user-item"
                                        data-user-id="<?= $user['id'] ?>">
-                                        <strong><?= esc($user['name'] ?: $user['username']) ?></strong>
+                                        <strong><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: $user['username']) ?></strong>
                                         <br><small class="text-muted">
                                             Role: <?= ucfirst(str_replace('_', ' ', $user['role'])) ?>
                                         </small>
@@ -68,7 +68,7 @@
                         <option value="">Choose an admin...</option>
                         <?php foreach ($users as $user): ?>
                             <?php if ($user['id'] != session()->get('admin_id')): // Don't show current user ?>
-                                <option value="<?= $user['id'] ?>"><?= esc($user['name'] ?: $user['username']) ?> (<?= ucfirst(str_replace('_', ' ', $user['role'])) ?>)</option>
+                                <option value="<?= $user['id'] ?>"><?= esc(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? '')) ?: $user['username']) ?> (<?= ucfirst(str_replace('_', ' ', $user['role'])) ?>)</option>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </select>

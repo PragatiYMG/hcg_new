@@ -53,7 +53,7 @@ class MeterManufacturers extends Controller
 
         // Build query with admin name join
         $builder = $model->builder();
-        $builder->select('meter_manufacturers.*, admins.name as created_by_name, meter_manufacturers.created_date')
+        $builder->select('meter_manufacturers.*, CONCAT(admins.first_name, " ", admins.last_name) as created_by_name, meter_manufacturers.created_date')
                 ->join('admins', 'admins.id = meter_manufacturers.created_by', 'left');
 
         // Apply search
