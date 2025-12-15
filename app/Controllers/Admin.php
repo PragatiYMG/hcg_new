@@ -14,6 +14,16 @@ class Admin extends Controller
     {
         helper('url');
     }
+
+    public function index()
+    {
+        if (session()->get('admin_logged_in')) {
+            return redirect()->to(base_url('admin/dashboard'));
+        } else {
+            return redirect()->to(base_url('admin/login'));
+        }
+    }
+
     public function login()
     {
         if (session()->get('admin_logged_in')) {
@@ -62,6 +72,13 @@ class Admin extends Controller
                 return redirect()->to(base_url('admin/profile'));
             }
 
+            // Check if there's a redirect URL stored
+            $redirectUrl = session()->get('admin_redirect_url');
+            if ($redirectUrl) {
+                session()->remove('admin_redirect_url');
+                return redirect()->to($redirectUrl);
+            }
+
             return redirect()->to(base_url('admin/dashboard'));
         } else {
             session()->setFlashdata('error', 'Invalid username/email or password');
@@ -71,10 +88,6 @@ class Admin extends Controller
 
     public function dashboard()
     {
-        if (!session()->get('admin_logged_in')) {
-            return redirect()->to(base_url('admin/login'));
-        }
-
         // Check permission
         if (!hasPermission('dashboard.view')) {
             return redirect()->to(base_url('admin/login'))->with('error', 'Access denied');
@@ -83,7 +96,27 @@ class Admin extends Controller
         $settingsModel = new SettingsModel();
         $site_logo = $settingsModel->getSetting('site_logo');
 
-        return view('admin/dashboard', ['site_logo' => $site_logo]);
+        // Get admin data for greeting
+        $adminModel = new AdminModel();
+        $admin = $adminModel->find(session()->get('admin_id'));
+
+        // Get metrics data
+        $areaModel = new AreaModel();
+        $societyModel = new \App\Models\SocietyModel();
+        $customerModel = new \App\Models\CustomerModel();
+        $billModel = new \App\Models\BillModel();
+
+        $metrics = [
+            'total_admins' => $adminModel->countAllResults(),
+            'total_areas' => $areaModel->countAllResults(),
+            'total_societies' => $societyModel->countAllResults(),
+            'total_customers' => $customerModel->countAllResults(),
+            'active_customers' => $customerModel->where('status', 'active')->countAllResults(),
+            'pending_customers' => $customerModel->where('status', 'pending')->countAllResults(),
+            'total_bills' => $billModel->countAllResults()
+        ];
+
+        return view('admin/dashboard', ['site_logo' => $site_logo, 'metrics' => $metrics, 'admin' => $admin]);
     }
 
     public function logout()
@@ -823,108 +856,420 @@ class Admin extends Controller
 
     public function settings()
     {
-        if (!session()->get('admin_logged_in')) {
-            return redirect()->to(base_url('admin/login'));
-        }
-
         // Check permission
         if (!hasPermission('settings.view')) {
             return redirect()->to(base_url('admin/dashboard'))->with('error', 'Access denied');
         }
 
         $settingsModel = new SettingsModel();
-        $site_logo = $settingsModel->getSetting('site_logo');
-        $site_favicon = $settingsModel->getSetting('site_favicon');
 
-        return view('admin/settings', ['site_logo' => $site_logo, 'site_favicon' => $site_favicon]);
+        // Get all settings
+        $settings = [
+            'site_full_name' => $settingsModel->getSetting('site_full_name'),
+            'site_short_name' => $settingsModel->getSetting('site_short_name'),
+            'site_logo' => $settingsModel->getSetting('site_logo'),
+            'site_favicon' => $settingsModel->getSetting('site_favicon'),
+            'site_copyright' => $settingsModel->getSetting('site_copyright'),
+            'smtp_host' => $settingsModel->getSetting('smtp_host'),
+            'smtp_port' => $settingsModel->getSetting('smtp_port'),
+            'smtp_username' => $settingsModel->getSetting('smtp_username'),
+            'smtp_password' => $settingsModel->getSetting('smtp_password'),
+            'smtp_encryption' => $settingsModel->getSetting('smtp_encryption'),
+            'from_email' => $settingsModel->getSetting('from_email'),
+            'from_name' => $settingsModel->getSetting('from_name'),
+        ];
+
+        // Get service location settings
+        $serviceLocationJson = $settingsModel->getSetting('service_location');
+        $settings['service_location'] = $serviceLocationJson ? json_decode($serviceLocationJson, true) : [];
+
+        // Check if logo and favicon files exist
+        $site_logo = $settings['site_logo'];
+        $site_favicon = $settings['site_favicon'];
+
+        return view('admin/settings', [
+            'settings' => $settings,
+            'site_logo' => $site_logo,
+            'site_favicon' => $site_favicon
+        ]);
     }
 
     public function updateSettings()
     {
-        if (!session()->get('admin_logged_in')) {
-            return redirect()->to(base_url('admin/login'));
-        }
 
         $settingsModel = new SettingsModel();
-
-
+        $tab = $this->request->getPost('tab') ?? 'basic';
 
         $validation = \Config\Services::validation();
         $rules = [];
-        
-        // Only validate logo if it was uploaded
-        if ($this->request->getFile('logo')->isValid()) {
-            $rules['logo'] = [
-                'label' => 'Logo',
-                'rules' => 'max_size[logo,2048]|is_image[logo]|mime_in[logo,image/jpg,image/jpeg,image/png,image/webp]',
-                'errors' => [
-                    'max_size' => 'Logo image size should not exceed 2MB',
-                    'is_image' => 'Please upload a valid image file',
-                    'mime_in' => 'Only JPG, JPEG, PNG and WebP images are allowed'
+
+        // Service Location Settings Validation
+        if ($tab === 'service_location') {
+            $rules = [
+                'state_name' => [
+                    'label' => 'State Name',
+                    'rules' => 'required|max_length[100]',
+                    'errors' => [
+                        'required' => 'State name is required',
+                        'max_length' => 'State name cannot exceed 100 characters'
+                    ]
+                ],
+                'city_name' => [
+                    'label' => 'City Name',
+                    'rules' => 'required|max_length[100]',
+                    'errors' => [
+                        'required' => 'City name is required',
+                        'max_length' => 'City name cannot exceed 100 characters'
+                    ]
+                ],
+                'serviceable_pincodes' => [
+                    'label' => 'Serviceable Pincodes',
+                    'rules' => 'required|max_length[1000]',
+                    'errors' => [
+                        'required' => 'Serviceable pincodes are required',
+                        'max_length' => 'Serviceable pincodes cannot exceed 1000 characters'
+                    ]
                 ]
             ];
         }
-        
-        // Only validate favicon if it was uploaded
-        if ($this->request->getFile('favicon')->isValid()) {
-            $rules['favicon'] = [
-                'label' => 'Favicon',
-                'rules' => 'max_size[favicon,1024]|is_image[favicon]|mime_in[favicon,image/x-icon,image/vnd.microsoft.icon,image/png]',
-                'errors' => [
-                    'max_size' => 'Favicon size should not exceed 1MB',
-                    'is_image' => 'Please upload a valid favicon',
-                    'mime_in' => 'Only ICO, PNG, or JPG images are allowed for favicon'
+
+        // Basic Settings Validation
+        if ($tab === 'basic') {
+            $rules = [
+                'site_full_name' => [
+                    'label' => 'Full Name',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'Site full name is required',
+                        'max_length' => 'Full name cannot exceed 255 characters'
+                    ]
+                ],
+                'site_short_name' => [
+                    'label' => 'Short Name',
+                    'rules' => 'required|max_length[100]',
+                    'errors' => [
+                        'required' => 'Site short name is required',
+                        'max_length' => 'Short name cannot exceed 100 characters'
+                    ]
+                ],
+                'site_copyright' => [
+                    'label' => 'Copyright',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'Copyright text is required',
+                        'max_length' => 'Copyright cannot exceed 255 characters'
+                    ]
+                ]
+            ];
+
+            // Only validate logo if it was uploaded
+            if ($this->request->getFile('logo') && $this->request->getFile('logo')->isValid()) {
+                $rules['logo'] = [
+                    'label' => 'Logo',
+                    'rules' => 'max_size[logo,2048]|is_image[logo]|mime_in[logo,image/jpg,image/jpeg,image/png,image/webp]',
+                    'errors' => [
+                        'max_size' => 'Logo image size should not exceed 2MB',
+                        'is_image' => 'Please upload a valid image file',
+                        'mime_in' => 'Only JPG, JPEG, PNG and WebP images are allowed'
+                    ]
+                ];
+            }
+
+            // Only validate favicon if it was uploaded
+            if ($this->request->getFile('favicon') && $this->request->getFile('favicon')->isValid()) {
+                $rules['favicon'] = [
+                    'label' => 'Favicon',
+                    'rules' => 'max_size[favicon,1024]|is_image[favicon]|mime_in[favicon,image/x-icon,image/vnd.microsoft.icon,image/png]',
+                    'errors' => [
+                        'max_size' => 'Favicon size should not exceed 1MB',
+                        'is_image' => 'Please upload a valid favicon',
+                        'mime_in' => 'Only ICO, PNG, or JPG images are allowed for favicon'
+                    ]
+                ];
+            }
+        }
+
+        // Email Settings Validation
+        if ($tab === 'email') {
+            $rules = [
+                'smtp_host' => [
+                    'label' => 'SMTP Host',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'SMTP host is required',
+                        'max_length' => 'SMTP host cannot exceed 255 characters'
+                    ]
+                ],
+                'smtp_port' => [
+                    'label' => 'SMTP Port',
+                    'rules' => 'required|numeric|greater_than[0]|less_than[65536]',
+                    'errors' => [
+                        'required' => 'SMTP port is required',
+                        'numeric' => 'Port must be a number',
+                        'greater_than' => 'Port must be greater than 0',
+                        'less_than' => 'Port must be less than 65536'
+                    ]
+                ],
+                'smtp_username' => [
+                    'label' => 'SMTP Username',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'SMTP username is required',
+                        'max_length' => 'Username cannot exceed 255 characters'
+                    ]
+                ],
+                'smtp_password' => [
+                    'label' => 'SMTP Password',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'SMTP password is required',
+                        'max_length' => 'Password cannot exceed 255 characters'
+                    ]
+                ],
+                'smtp_encryption' => [
+                    'label' => 'SMTP Encryption',
+                    'rules' => 'required|in_list[tls,ssl,none]',
+                    'errors' => [
+                        'required' => 'SMTP encryption is required',
+                        'in_list' => 'Encryption must be TLS, SSL, or None'
+                    ]
+                ],
+                'from_email' => [
+                    'label' => 'From Email',
+                    'rules' => 'required|valid_email|max_length[255]',
+                    'errors' => [
+                        'required' => 'From email is required',
+                        'valid_email' => 'Please enter a valid email address',
+                        'max_length' => 'From email cannot exceed 255 characters'
+                    ]
+                ],
+                'from_name' => [
+                    'label' => 'From Name',
+                    'rules' => 'required|max_length[255]',
+                    'errors' => [
+                        'required' => 'From name is required',
+                        'max_length' => 'From name cannot exceed 255 characters'
+                    ]
                 ]
             ];
         }
-        
-        // Only run validation if there are rules to validate
+
         if (!empty($rules)) {
             $validation->setRules($rules);
             if (!$validation->withRequest($this->request)->run()) {
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validation->getErrors()
+                    ], 400);
+                }
                 return redirect()->back()->withInput()->with('errors', $validation->getErrors());
             }
         }
 
+        // Update Service Location Settings
+        if ($tab === 'service_location') {
+            $serviceLocationData = [
+                'state_name' => $this->request->getPost('state_name'),
+                'city_name' => $this->request->getPost('city_name'),
+                'serviceable_pincodes' => $this->request->getPost('serviceable_pincodes')
+            ];
+
+            $settingsModel->setSetting('service_location', json_encode($serviceLocationData));
+
+            $message = 'Service location settings updated successfully';
+        }
+
+        // Update Basic Settings
+        if ($tab === 'basic') {
+            $settingsModel->setSetting('site_full_name', $this->request->getPost('site_full_name'));
+            $settingsModel->setSetting('site_short_name', $this->request->getPost('site_short_name'));
+            $settingsModel->setSetting('site_copyright', $this->request->getPost('site_copyright'));
+
+            // Handle logo upload
+            $logo = $this->request->getFile('logo');
+            if ($logo && $logo->isValid() && !$logo->hasMoved()) {
+                $uploadPath = ROOTPATH . 'public/uploads/basic_settings/';
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+
+                // Delete old logo if exists
+                $oldLogo = $settingsModel->getSetting('site_logo');
+                if ($oldLogo && file_exists(ROOTPATH . 'public/uploads/basic_settings/' . $oldLogo)) {
+                    unlink(ROOTPATH . 'public/uploads/basic_settings/' . $oldLogo);
+                }
+
+                $newLogoName = 'logo_' . time() . '.' . $logo->getClientExtension();
+                $logo->move($uploadPath, $newLogoName);
+                $settingsModel->setSetting('site_logo', 'basic_settings/' . $newLogoName);
+            }
+
+            // Handle favicon upload
+            $favicon = $this->request->getFile('favicon');
+            if ($favicon && $favicon->isValid() && !$favicon->hasMoved()) {
+                $uploadPath = ROOTPATH . 'public/uploads/basic_settings/';
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
+                }
+
+                // Delete old favicon if exists
+                $oldFavicon = $settingsModel->getSetting('site_favicon');
+                if ($oldFavicon && file_exists(ROOTPATH . 'public/uploads/basic_settings/' . basename($oldFavicon))) {
+                    unlink(ROOTPATH . 'public/uploads/basic_settings/' . basename($oldFavicon));
+                }
+
+                $newFaviconName = 'favicon_' . time() . '.' . ($favicon->getClientExtension() === 'ico' ? 'ico' : 'png');
+                $favicon->move($uploadPath, $newFaviconName);
+                $settingsModel->setSetting('site_favicon', 'basic_settings/' . $newFaviconName);
+            }
+
+            $message = 'Basic settings updated successfully';
+        }
+
+        // Update Email Settings
+        if ($tab === 'email') {
+            $settingsModel->setSetting('smtp_host', $this->request->getPost('smtp_host'));
+            $settingsModel->setSetting('smtp_port', $this->request->getPost('smtp_port'));
+            $settingsModel->setSetting('smtp_username', $this->request->getPost('smtp_username'));
+            $settingsModel->setSetting('smtp_password', $this->request->getPost('smtp_password'));
+            $settingsModel->setSetting('smtp_encryption', $this->request->getPost('smtp_encryption'));
+            $settingsModel->setSetting('from_email', $this->request->getPost('from_email'));
+            $settingsModel->setSetting('from_name', $this->request->getPost('from_name'));
+
+            $message = 'Email settings updated successfully';
+        }
+
+        // Check if this is an AJAX request
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => $message
+            ]);
+        }
+
+        return redirect()->to(base_url('admin/settings') . ($tab === 'email' ? '#email' : ($tab === 'service_location' ? '#service-location' : '#basic')))->with('success', $message);
+    }
+
+    public function testEmail()
+    {
+        if (!session()->get('admin_logged_in')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Check permission
+        if (!hasPermission('settings.view')) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Access denied'], 403);
+        }
+
+        $validation = \Config\Services::validation();
+        $validation->setRules([
+            'recipient_email' => [
+                'label' => 'Recipient Email',
+                'rules' => 'required|valid_email',
+                'errors' => [
+                    'required' => 'Recipient email is required',
+                    'valid_email' => 'Please enter a valid email address'
+                ]
+            ],
+            'message' => [
+                'label' => 'Message',
+                'rules' => 'required|max_length[1000]',
+                'errors' => [
+                    'required' => 'Message is required',
+                    'max_length' => 'Message cannot exceed 1000 characters'
+                ]
+            ]
+        ]);
+
         if (!$validation->withRequest($this->request)->run()) {
-            return redirect()->back()->withInput()->with('errors', $validation->getErrors());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Validation failed: ' . implode(', ', $validation->getErrors())
+            ], 400);
         }
 
-        $logo = $this->request->getFile('logo');
-        $favicon = $this->request->getFile('favicon');
-        $uploadPath = ROOTPATH . 'uploads/';
-        
-        // Create uploads directory if it doesn't exist
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
-        }
+        try {
+            $settingsModel = new SettingsModel();
 
-        // Handle logo upload
-        if ($logo->isValid() && !$logo->hasMoved()) {
-            // Delete old logo if exists
-            $oldLogo = $settingsModel->getSetting('site_logo');
-            if ($oldLogo && file_exists(ROOTPATH . 'uploads/' . $oldLogo)) {
-                unlink(ROOTPATH . 'uploads/' . $oldLogo);
+            // Get SMTP settings
+            $smtpSettings = [
+                'host' => $settingsModel->getSetting('smtp_host'),
+                'port' => $settingsModel->getSetting('smtp_port'),
+                'username' => $settingsModel->getSetting('smtp_username'),
+                'password' => $settingsModel->getSetting('smtp_password'),
+                'encryption' => $settingsModel->getSetting('smtp_encryption'),
+                'from_email' => $settingsModel->getSetting('from_email'),
+                'from_name' => $settingsModel->getSetting('from_name'),
+            ];
+
+            // Validate required SMTP settings
+            $requiredFields = ['host', 'port', 'username', 'password', 'from_email', 'from_name'];
+            $missingFields = [];
+
+            foreach ($requiredFields as $field) {
+                if (empty($smtpSettings[$field])) {
+                    $missingFields[] = ucfirst(str_replace('_', ' ', $field));
+                }
             }
-            
-            $newLogoName = 'logo_' . time() . '.' . $logo->getClientExtension();
-            $logo->move($uploadPath, $newLogoName);
-            $settingsModel->setSetting('site_logo', $newLogoName);
-        }
 
-        // Handle favicon upload
-        if ($favicon->isValid() && !$favicon->hasMoved()) {
-            // Delete old favicon if exists
-            $oldFavicon = $settingsModel->getSetting('site_favicon');
-            if ($oldFavicon && file_exists(ROOTPATH . 'uploads/' . $oldFavicon)) {
-                unlink(ROOTPATH . 'uploads/' . $oldFavicon);
+            if (!empty($missingFields)) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Missing SMTP settings: ' . implode(', ', $missingFields)
+                ], 400);
             }
-            
-            $newFaviconName = 'favicon_' . time() . '.' . ($favicon->getClientExtension() === 'ico' ? 'ico' : 'png');
-            $favicon->move($uploadPath, $newFaviconName);
-            $settingsModel->setSetting('site_favicon', $newFaviconName);
+
+            // Configure email
+            $email = \Config\Services::email();
+
+            $config = [
+                'protocol' => 'smtp',
+                'SMTPHost' => $smtpSettings['host'],
+                'SMTPPort' => $smtpSettings['port'],
+                'SMTPUser' => $smtpSettings['username'],
+                'SMTPPass' => $smtpSettings['password'],
+                'SMTPCrypto' => $smtpSettings['encryption'] ?: 'tls',
+                'mailType' => 'html',
+                'charset' => 'utf-8',
+                'wordWrap' => true,
+            ];
+
+            $email->initialize($config);
+
+            $email->setFrom($smtpSettings['from_email'], $smtpSettings['from_name']);
+            $email->setTo($this->request->getPost('recipient_email'));
+            $email->setSubject('Test Email - ' . ($settingsModel->getSetting('site_short_name') ?: 'Your Site'));
+            $email->setMessage($this->request->getPost('message'));
+
+            if ($email->send()) {
+                // Log successful test
+                $activityLogger = new ActivityLogger();
+                $activityLogger->logAdd('email_tests', 0, 'Test email sent to: ' . $this->request->getPost('recipient_email'));
+
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Test email sent successfully!'
+                ]);
+            } else {
+                $error = $email->printDebugger(['headers', 'subject', 'body']);
+                log_message('error', 'Email test failed: ' . $error);
+
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Failed to send test email. Please check your SMTP settings.'
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            log_message('error', 'Email test error: ' . $e->getMessage());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'An error occurred while sending the test email: ' . $e->getMessage()
+            ], 500);
         }
-        return redirect()->to(base_url('admin/settings'))->with('success', 'Settings updated successfully');
     }
 
     public function areas()

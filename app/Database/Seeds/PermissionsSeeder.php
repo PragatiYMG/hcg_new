@@ -39,6 +39,12 @@ class PermissionsSeeder extends Seeder
             ['name' => 'admin_users.edit', 'display_name' => 'Edit Admin Users', 'module' => 'Admin Users'],
             ['name' => 'admin_users.delete', 'display_name' => 'Delete Admin Users', 'module' => 'Admin Users'],
 
+            // Customers
+            ['name' => 'customers.view', 'display_name' => 'View Customers', 'module' => 'Customers'],
+            ['name' => 'customers.create', 'display_name' => 'Create Customers', 'module' => 'Customers'],
+            ['name' => 'customers.edit', 'display_name' => 'Edit Customers', 'module' => 'Customers'],
+            ['name' => 'customers.delete', 'display_name' => 'Delete Customers', 'module' => 'Customers'],
+
             // Users
             ['name' => 'users.view', 'display_name' => 'View Users', 'module' => 'Users'],
             ['name' => 'users.create', 'display_name' => 'Create Users', 'module' => 'Users'],

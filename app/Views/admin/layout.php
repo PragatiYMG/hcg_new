@@ -16,6 +16,14 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="<?= base_url('css/admin.css') ?>">
 
+    <!-- Dynamic Favicon -->
+    <?php
+    $settingsModel = new \App\Models\SettingsModel();
+    $favicon = $settingsModel->getSetting('site_favicon');
+    $faviconUrl = $favicon ? base_url('uploads/' . $favicon) : base_url('uploads/logo_1762758146.png');
+    ?>
+    <link rel="icon" href="<?= esc($faviconUrl) ?>" type="image/x-icon">
+
     <style>
         /* Top Header Styles */
         .top-header {
@@ -54,6 +62,15 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .top-header .clock {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .top-header .btn-link {
@@ -312,9 +329,9 @@
                         <i class="fas fa-bars"></i>
                     </button>
                     <?php
-                        $logo = isset($site_logo) ? trim($site_logo) : '';
+                        $logo = $settingsModel->getSetting('site_logo');
                         $logoUrl = $logo
-                            ? (preg_match('/^https?:\/\//i', $logo) ? $logo : base_url('uploads/' . ltrim($logo, '/')))
+                            ? base_url('uploads/' . $logo)
                             : base_url('uploads/logo_1762758146.png');
                     ?>
                     <a href="<?= base_url('admin/dashboard') ?>" class="logo">
@@ -323,6 +340,9 @@
                     </a>
                 </div>
                 <div class="header-actions">
+                    <div class="clock mr-3">
+                        <i class="fas fa-clock"></i> <span id="current-time"></span>
+                    </div>
                     <button class="btn btn-link" title="Notifications">
                         <i class="fas fa-bell"></i>
                     </button>
@@ -445,8 +465,7 @@
                         id: 'dashboard',
                         title: 'Dashboard',
                         icon: 'fas fa-tachometer-alt',
-                        url: '<?= base_url("admin/dashboard") ?>',
-                        permission: 'dashboard.view'
+                        url: '<?= base_url("admin/dashboard") ?>'
                     },
                     {
                         id: 'masters',
@@ -468,6 +487,13 @@
                             { id: 'images-list', title: 'Images', icon: 'fas fa-images', url: '<?= base_url("admin/images") ?>', permission: 'masters.images' },
                             { id: 'bills-list', title: 'Bill Management', icon: 'fas fa-file-invoice', url: '<?= base_url("admin/bills") ?>', permission: 'bills.view' },
                         ]
+                    },
+                    {
+                        id: 'customers',
+                        title: 'Customers',
+                        icon: 'fas fa-user-friends',
+                        url: '<?= base_url("admin/customers") ?>',
+                        permission: 'customers.view'
                     },
                     {
                         id: 'users',
@@ -599,30 +625,28 @@
                 const isCollapsed = this.state.openSection !== section.id;
                 const hasChildren = section.children && section.children.length > 0;
 
-                let html = `
-                    <div class="menu-section ${isCollapsed ? 'collapsed' : ''}" data-section-id="${section.id}">
-                `;
-
                 if (hasChildren) {
-                    html += `
-                        <div class="menu-section-header" tabindex="0" role="button" aria-expanded="${!isCollapsed}" aria-controls="section-${section.id}">
-                            <span><i class="${section.icon}"></i> ${section.title}</span>
-                            <i class="fas fa-chevron-down menu-section-toggle"></i>
+                    // Collapsible section with children
+                    let html = `
+                        <div class="menu-section ${isCollapsed ? 'collapsed' : ''}" data-section-id="${section.id}">
+                            <div class="menu-section-header" tabindex="0" role="button" aria-expanded="${!isCollapsed}" aria-controls="section-${section.id}">
+                                <span><i class="${section.icon}"></i> ${section.title}</span>
+                                <i class="fas fa-chevron-down menu-section-toggle"></i>
+                            </div>
+                            <ul class="menu-items" id="section-${section.id}" role="menu">
+                                ${section.children.map(child => this.renderMenuItem(child)).join('')}
+                            </ul>
                         </div>
-                        <ul class="menu-items" id="section-${section.id}" role="menu">
-                            ${section.children.map(child => this.renderMenuItem(child)).join('')}
-                        </ul>
                     `;
+                    return html;
                 } else {
-                    html += `
+                    // Single item, not wrapped in collapsible section
+                    return `
                         <ul class="menu-items">
                             ${this.renderMenuItem(section)}
                         </ul>
                     `;
                 }
-
-                html += '</div>';
-                return html;
             }
 
             renderMenuItem(item) {
@@ -1002,6 +1026,23 @@
         $('#changePasswordModal form').on('submit', function(e) {
             // Optional: Add client-side validation here if needed
         });
+
+        // Update clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour12: true,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('current-time').textContent = timeString;
+        }
+
+        // Update clock immediately and then every second
+        updateClock();
+        setInterval(updateClock, 1000);
     </script>
 </body>
 </html>

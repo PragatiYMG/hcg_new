@@ -8,6 +8,7 @@ use CodeIgniter\Router\RouteCollection;
 $routes->get('/', 'Home::index');
 
 // Admin routes
+$routes->get('/admin', 'Admin::index');
 $routes->get('/admin/login', 'Admin::login');
 $routes->post('/admin/authenticate', 'Admin::authenticate');
 $routes->get('/admin/dashboard', 'Admin::dashboard');
@@ -23,6 +24,7 @@ $routes->get('/admin/admin-users/edit/(:num)', 'Admin::editAdminUser/$1');
 $routes->post('/admin/admin-users/update/(:num)', 'Admin::updateAdminUser/$1');
 $routes->get('/admin/settings', 'Admin::settings');
 $routes->post('/admin/settings/update', 'Admin::updateSettings');
+$routes->post('/admin/settings/test-email', 'Admin::testEmail');
 
 // Access Management routes (Super Admin Only)
 $routes->get('/admin/access-management', 'AccessManagement::index');
@@ -188,3 +190,14 @@ $routes->get('/admin/burner-counts/create', 'BurnerCounts::create');
 $routes->post('/admin/burner-counts/store', 'BurnerCounts::store');
 $routes->get('/admin/burner-counts/edit/(:num)', 'BurnerCounts::edit/$1');
 $routes->post('/admin/burner-counts/update/(:num)', 'BurnerCounts::update/$1');
+
+// Customers routes
+$routes->get('/admin/customers', 'Customers::index');
+$routes->get('/admin/customers/get-data', 'Customers::getData');
+$routes->get('/admin/customers/create', 'Customers::create');
+$routes->post('/admin/customers/store', 'Customers::store');
+$routes->get('/admin/customers/edit/([0-9]+)', 'Customers::edit/$1');
+$routes->get('/admin/customers/([0-9]+)', 'Customers::show/$1');
+$routes->post('/admin/customers/update/([0-9]+)', 'Customers::update/$1');
+$routes->get('/admin/customers/delete/([0-9]+)', 'Customers::delete/$1');
+$routes->post('/admin/customers/toggle-status/([0-9]+)', 'Customers::toggleStatus/$1');

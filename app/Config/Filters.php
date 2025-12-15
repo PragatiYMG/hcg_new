@@ -24,6 +24,7 @@ class Filters extends BaseConfig
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
+        'adminauth'     => \App\Filters\AdminAuth::class,
     ];
 
     /**
@@ -69,5 +70,60 @@ class Filters extends BaseConfig
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        'adminauth' => [
+            'before' => [
+                'admin/dashboard',
+                'admin/profile',
+                'admin/profile/*',
+                'admin/admin-users',
+                'admin/admin-users/*',
+                'admin/areas',
+                'admin/areas/*',
+                'admin/societies',
+                'admin/societies/*',
+                'admin/customers',
+                'admin/customers/*',
+                'admin/settings',
+                'admin/settings/*',
+                'admin/access-management',
+                'admin/access-management/*',
+                'admin/users',
+                'admin/users/*',
+                'admin/taxes',
+                'admin/taxes/*',
+                'admin/rates',
+                'admin/rates/*',
+                'admin/charges',
+                'admin/charges/*',
+                'admin/banks',
+                'admin/banks/*',
+                'admin/images',
+                'admin/images/*',
+                'admin/bills',
+                'admin/bills/*',
+                'admin/connection-fees',
+                'admin/connection-fees/*',
+                'admin/connection-statuses',
+                'admin/connection-statuses/*',
+                'admin/meter-contractors',
+                'admin/meter-contractors/*',
+                'admin/meter-manufacturers',
+                'admin/meter-manufacturers/*',
+                'admin/stove-types',
+                'admin/stove-types/*',
+                'admin/burner-counts',
+                'admin/burner-counts/*',
+                'admin/countries',
+                'admin/countries/*',
+                'admin/states',
+                'admin/states/*',
+                'admin/cities',
+                'admin/cities/*',
+                'admin/departments',
+                'admin/departments/*',
+                'admin/logs'
+            ]
+        ]
+    ];
 }

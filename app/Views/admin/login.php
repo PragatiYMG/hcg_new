@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - HCG News</title>
+    <title>Admin Login - Haryana City Gas</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -91,7 +91,7 @@
             font-size: 18px;
         }
 
-        input[type="email"], input[type="password"] {
+        input[type="email"], input[type="password"],input[type='text'] {
             width: 100%;
             padding: 15px 15px 15px 45px;
             border: 2px solid #e2e8f0;
@@ -102,7 +102,7 @@
             background: #ffffff;
         }
 
-        input[type="email"]:focus, input[type="password"]:focus {
+        input[type="email"]:focus, input[type="password"]:focus, input[type='text']:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
